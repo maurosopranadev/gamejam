@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guild Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--card-bg:#12101e;--card-border:#c8922a;--card-border2:#7a5415;--gold:#f0c040;--amber:#e8a020;--text:#e8dcc8;--text-dim:#8a7a60;--poder:#e84040;--ouro:#f0c040;--moral:#40c860;--rep:#4080f0;--bar-bg:#0e0e16;--left-color:#e84040;--right-color:#40c860;--scanline:rgba(0,0,0,0.07);--danger-color:#ff4444;--warning-color:#f0a020;--safe-color:#40c860;--boss-red:#ff2020;--boss-dark:#0a0205;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Press Start 2P',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,var(--scanline) 0px,var(--scanline) 1px,transparent 1px,transparent 3px);pointer-events:none;z-index:999;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#ffffff44 0%,transparent 100%),radial-gradient(1px 1px at 80% 15%,#ffffff33 0%,transparent 100%),radial-gradient(1px 1px at 50% 70%,#ffffff22 0%,transparent 100%),radial-gradient(2px 2px at 75% 85%,#ffffff33 0%,transparent 100%);pointer-events:none;z-index:0;}
+.screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;width:100%;max-width:420px;padding:12px 16px;}
+.screen.active{display:flex;animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#screen-title{gap:18px;text-align:center;}
+.title-emblem{font-size:44px;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 0 16px var(--gold));}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.game-title{color:var(--gold);font-size:13px;line-height:1.8;text-shadow:2px 2px 0 #000,0 0 20px var(--amber);letter-spacing:2px;}
+.subtitle{color:var(--text-dim);font-size:7px;line-height:2;}
+.input-group{display:flex;flex-direction:column;gap:8px;width:100%;}
+.input-label{font-size:7px;color:var(--text-dim);letter-spacing:1px;}
+input[type="text"]{background:#0a0a14;border:2px solid var(--card-border2);border-bottom:2px solid var(--card-border);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 12px;width:100%;outline:none;letter-spacing:1px;}
+input[type="text"]:focus{border-color:var(--gold);}
+input[type="text"]::placeholder{color:#3a3530;}
+.btn-primary{background:var(--card-border);border:none;color:#000;font-family:'Press Start 2P',monospace;font-size:9px;padding:12px 22px;cursor:pointer;letter-spacing:1px;transition:all 0.1s;clip-path:polygon(4px 0%,calc(100% - 4px) 0%,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0% calc(100% - 4px),0% 4px);}
+.btn-primary:hover{background:var(--gold);transform:scale(1.05);}
+.btn-secondary{background:transparent;border:2px solid var(--card-border2);color:var(--text-dim);font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 16px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;}
+.btn-secondary:hover{border-color:var(--amber);color:var(--amber);}
+.legacy-banner{background:linear-gradient(135deg,#1a1408,#0f0d1a);border:1px solid var(--card-border2);border-left:3px solid var(--gold);padding:10px 12px;font-size:7px;line-height:2;color:var(--text-dim);width:100%;}
+.legacy-banner strong{color:var(--gold);}
+#screen-game{gap:8px;justify-content:flex-start;height:100vh;max-height:750px;padding:10px 14px;}
+.hud-top{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.guild-name{font-size:7px;color:var(--amber);letter-spacing:1px;}
+.day-counter{font-size:7px;color:var(--text-dim);}
+.archetype-badge{font-size:6px;color:var(--text-dim);background:#1a1408;border:1px solid #3a2810;padding:3px 6px;letter-spacing:1px;}
+.btn-mute{background:transparent;border:1px solid var(--card-border2);color:var(--text-dim);font-family:'Press Start 2P',monospace;font-size:8px;padding:3px 6px;cursor:pointer;line-height:1;}
+.btn-mute:hover{border-color:var(--amber);color:var(--amber);}
+.volume-slider{-webkit-appearance:none;appearance:none;width:55px;height:4px;background:var(--card-border2);outline:none;cursor:pointer;border-radius:2px;}
+.volume-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:10px;height:10px;background:var(--amber);border-radius:50%;cursor:pointer;}
+.volume-slider::-moz-range-thumb{width:10px;height:10px;background:var(--amber);border-radius:50%;cursor:pointer;border:none;}
+.status-bars{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;width:100%;}
+.stat-bar{display:flex;flex-direction:column;gap:4px;}
+.stat-label{display:flex;justify-content:space-between;font-size:6px;letter-spacing:1px;align-items:center;}
+.stat-name{color:var(--text-dim);}.stat-value{color:var(--text);}
+.stat-warn{
+  font-size:9px;margin-left:3px;
+  animation:warnPulse 0.7s ease-in-out infinite;
+  display:none;
+}
+.stat-warn.low{color:#ff5555;}
+.stat-warn.high{color:#f0c040;}
+.stat-warn.visible{display:inline;}
+@keyframes warnPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.3)}}
+.bar-track{height:14px;background:var(--bar-bg);border:2px solid #2a2a2a;position:relative;overflow:visible;}
+.bar-track::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,transparent 0px,transparent 5px,rgba(0,0,0,0.25) 5px,rgba(0,0,0,0.25) 6px);pointer-events:none;z-index:2;}
+.bar-fill{height:100%;transition:width 1.4s cubic-bezier(0.25,1,0.5,1);position:relative;z-index:1;}
+/* Floating delta number next to stat bar */
+.stat-delta{
+  position:absolute;right:-28px;top:50%;transform:translateY(-50%);
+  font-family:'Press Start 2P',monospace;font-size:7px;font-weight:bold;
+  pointer-events:none;white-space:nowrap;
+  animation:deltaFade 2.5s ease forwards;
+  z-index:10;
+}
+.stat-delta.pos{color:#60f080;}
+.stat-delta.neg{color:#ff5555;}
+@keyframes deltaFade{
+  0%{opacity:1;transform:translateY(-50%);}
+  60%{opacity:1;transform:translateY(-80%);}
+  100%{opacity:0;transform:translateY(-110%);}
+}
+.bar-fill::before{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:rgba(255,255,255,0.18);}
+.bar-poder .bar-fill{background:var(--poder);box-shadow:2px 0 8px var(--poder);}
+.bar-ouro .bar-fill{background:var(--ouro);box-shadow:2px 0 8px var(--ouro);}
+.bar-moral .bar-fill{background:var(--moral);box-shadow:2px 0 8px var(--moral);}
+.bar-rep .bar-fill{background:var(--rep);box-shadow:2px 0 8px var(--rep);}
+@keyframes dangerFlash{0%,100%{border-color:var(--card-border2)}50%{border-color:var(--left-color);box-shadow:0 0 20px rgba(232,64,64,0.5)}}
+.bar-track.danger{animation:dangerFlash 0.8s ease 3;}
+.recruit-panel{display:flex;gap:6px;width:100%;min-height:34px;}
+.recruit-badge{display:flex;align-items:center;gap:5px;padding:4px 7px;border:2px solid;font-size:6px;flex:1;letter-spacing:0.5px;transition:border-color 0.5s;cursor:default;max-width:33%;overflow:hidden;}
+.recruit-badge.healthy{border-color:var(--safe-color);}.recruit-badge.at-risk{border-color:var(--warning-color);}
+.recruit-badge.critical{border-color:var(--danger-color);animation:pulseDanger 1s ease-in-out infinite;}
+@keyframes pulseDanger{0%,100%{box-shadow:0 0 4px rgba(255,68,68,0.3)}50%{box-shadow:0 0 12px rgba(255,68,68,0.8)}}
+.recruit-icon{font-size:14px;line-height:1;}.recruit-info{display:flex;flex-direction:column;gap:2px;overflow:hidden;}
+.recruit-name{color:var(--text);font-size:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recruit-class{color:var(--text-dim);font-size:5px;}.recruit-evolved-star{color:var(--gold);font-size:8px;margin-left:auto;}
+.recruit-slot-empty{border:1px dashed #1e1e2e;flex:1;min-height:30px;max-width:33%;display:flex;align-items:center;justify-content:center;}
+.recruit-slot-empty span{color:#2a2a3e;font-size:6px;}
+.boss-hp-container{display:none;flex-direction:column;gap:5px;width:100%;background:#0e0408;border:2px solid var(--boss-red);padding:8px 10px;}
+.boss-hp-header{display:flex;justify-content:space-between;font-size:6px;}
+.boss-name-label{color:var(--boss-red);letter-spacing:1px;}.boss-hp-num{color:var(--text);}
+.boss-hp-track{height:12px;background:#1a0808;border:1px solid #3a0808;overflow:hidden;position:relative;}
+.boss-hp-track::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,transparent 0px,transparent 5px,rgba(0,0,0,0.3) 5px,rgba(0,0,0,0.3) 6px);pointer-events:none;}
+.boss-hp-fill{height:100%;background:var(--boss-red);box-shadow:2px 0 8px var(--boss-red);transition:width 0.6s cubic-bezier(0.25,1,0.5,1);}
+.boss-phase-text{font-size:6px;color:#aa3333;text-align:center;letter-spacing:1px;}
+.card-area{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;justify-content:center;width:100%;}
+.choice-hint{display:flex;justify-content:space-between;width:100%;font-size:6px;}
+.hint-left{color:var(--left-color);opacity:0;transition:opacity 0.15s;max-width:45%;line-height:1.8;}
+.hint-right{color:var(--right-color);opacity:0;transition:opacity 0.15s;max-width:45%;line-height:1.8;text-align:right;}
+.hint-left.visible,.hint-right.visible{opacity:1;}
+.card{width:100%;max-width:310px;background:var(--card-bg);border:2px solid var(--card-border2);border-top:2px solid var(--card-border);border-left:2px solid var(--card-border);padding:16px;cursor:grab;user-select:none;position:relative;transition:box-shadow 0.2s;box-shadow:4px 4px 0 #000,0 0 20px rgba(200,146,42,0.15);will-change:transform;}
+.card:active{cursor:grabbing;}
+.card::before,.card::after{content:'✦';position:absolute;font-size:7px;color:var(--card-border2);font-family:sans-serif;}
+.card::before{top:5px;left:7px;}.card::after{bottom:5px;right:7px;}
+.card-overlay{position:absolute;inset:0;opacity:0;pointer-events:none;border:3px solid;}
+.card-overlay.left{border-color:var(--left-color);background:rgba(232,64,64,0.1);}
+.card-overlay.right{border-color:var(--right-color);background:rgba(64,200,96,0.1);}
+.card-icon{font-size:26px;text-align:center;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(200,146,42,0.5));display:block;}
+.card-category{font-size:6px;color:var(--card-border);letter-spacing:2px;text-align:center;margin-bottom:6px;}
+.card-memory-tag{font-size:6px;color:var(--amber);text-align:center;margin-bottom:5px;letter-spacing:1px;}
+.card-text{font-size:7px;line-height:1.9;color:var(--text);text-align:center;min-height:70px;}
+.card-question{font-size:7px;color:var(--amber);text-align:center;margin-top:10px;line-height:1.8;letter-spacing:1px;min-height:14px;}
+.card-divider{height:1px;background:linear-gradient(90deg,transparent,var(--card-border2),transparent);margin:10px 0;}
+.card-npc{font-size:6px;color:var(--text-dim);text-align:center;letter-spacing:1px;}
+.card.danger-card{border-color:var(--danger-color)!important;border-top-color:var(--danger-color)!important;}
+.card.danger-card .card-category{color:var(--danger-color);}
+.card.sacrifice-card{border-color:#e8a020!important;border-top-color:#e8a020!important;background:#100c02;}
+.card.sacrifice-card .card-category{color:#e8a020;}
+.card.sacrifice-card .card-text{color:#f0d89a;}
+.card.evolution-card{border-color:var(--gold)!important;border-top-color:var(--gold)!important;}
+.card.evolution-card .card-category{color:var(--gold);}
+.card.boss-card{border-color:var(--boss-red)!important;border-top-color:var(--boss-red)!important;background:var(--boss-dark);}
+.card.boss-card .card-category{color:var(--boss-red);}
+.card.boss-card .card-icon{filter:drop-shadow(0 0 14px #ff0000);}
+.card.boss-card .card-text{color:#ddbbbb;}
+.card.boss-card::before,.card.boss-card::after{color:#550000;}
+.card.boss-fight-card{border-color:var(--boss-red)!important;background:var(--boss-dark);animation:bossGlow 2s ease-in-out infinite;}
+@keyframes bossGlow{0%,100%{box-shadow:4px 4px 0 #000,0 0 15px rgba(255,32,32,0.3)}50%{box-shadow:4px 4px 0 #000,0 0 35px rgba(255,32,32,0.7)}}
+.card.boss-fight-card .card-category{color:var(--boss-red);}
+.swipe-buttons{display:flex;gap:16px;justify-content:center;}
+.btn-swipe{background:transparent;border:2px solid;font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 16px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;clip-path:polygon(4px 0%,calc(100% - 4px) 0%,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0% calc(100% - 4px),0% 4px);}
+.btn-swipe-left{border-color:var(--left-color);color:var(--left-color);}
+.btn-swipe-left:hover{background:var(--left-color);color:#000;}
+.btn-swipe-right{border-color:var(--right-color);color:var(--right-color);}
+.btn-swipe-right:hover{background:var(--right-color);color:#000;}
+.btn-boss-defend{border-color:#4499ff!important;color:#4499ff!important;}
+.btn-boss-defend:hover{background:#4499ff!important;color:#000!important;}
+.btn-boss-attack{border-color:var(--boss-red)!important;color:var(--boss-red)!important;}
+.btn-boss-attack:hover{background:var(--boss-red)!important;color:#fff!important;}
+.btn-neutral-wrap{display:none;justify-content:center;}
+.btn-understood{background:var(--boss-red);border:none;color:#fff;font-family:'Press Start 2P',monospace;font-size:9px;padding:12px 28px;cursor:pointer;letter-spacing:1px;clip-path:polygon(4px 0%,calc(100% - 4px) 0%,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0% calc(100% - 4px),0% 4px);}
+.btn-understood:hover{background:#ff4444;}
+#screen-gameover{gap:16px;text-align:center;}
+.gameover-skull{font-size:44px;animation:shake 0.5s ease-in-out 0s 3;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-5deg)}75%{transform:translateX(4px) rotate(5deg)}}
+.gameover-title{color:var(--left-color);font-size:12px;text-shadow:2px 2px 0 #000;line-height:1.8;}
+.gameover-reason{font-size:7px;color:var(--text-dim);line-height:2;max-width:300px;}
+.gameover-stats,.victory-stats{display:flex;flex-direction:column;gap:7px;width:100%;background:#0a0a14;border:1px solid var(--card-border2);padding:14px;}
+.victory-stats{background:#0a100a;border-color:#205020;}
+.gameover-stat-row,.victory-stat-row{display:flex;justify-content:space-between;font-size:7px;color:var(--text-dim);}
+.gameover-stat-row span:last-child,.victory-stat-row span:last-child{color:var(--gold);}
+.archetype-reveal{background:linear-gradient(135deg,#1a1408,#0f0d1a);border:2px solid var(--card-border);padding:14px;width:100%;}
+.archetype-reveal .label{font-size:6px;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;}
+.archetype-reveal .title{font-size:10px;color:var(--gold);text-shadow:0 0 12px var(--amber);line-height:1.8;}
+.archetype-reveal .desc{font-size:6px;color:var(--text-dim);margin-top:6px;line-height:2;}
+.legacy-earned{background:#0a0f0a;border:1px solid #204020;border-left:3px solid var(--moral);padding:10px;font-size:7px;color:#60c060;line-height:2;width:100%;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+#screen-victory{gap:18px;text-align:center;}
+.victory-crown{font-size:52px;animation:victoryFloat 2s ease-in-out infinite;filter:drop-shadow(0 0 20px var(--gold));}
+@keyframes victoryFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.victory-title{color:var(--gold);font-size:11px;line-height:1.8;text-shadow:2px 2px 0 #000,0 0 24px var(--amber);}
+.victory-subtitle{color:var(--text-dim);font-size:7px;line-height:2;}
+#screen-ranking{gap:14px;}
+.ranking-title{font-size:10px;color:var(--gold);text-align:center;text-shadow:0 0 12px var(--amber);}
+.ranking-list{width:100%;display:flex;flex-direction:column;gap:5px;max-height:380px;overflow-y:auto;}
+.ranking-item{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:9px 10px;background:#0c0c18;border:1px solid #1a1a2e;border-left:3px solid var(--card-border2);font-size:7px;}
+.ranking-item:first-child{border-left-color:var(--gold);}
+.ranking-item:nth-child(2){border-left-color:#c0c0c0;}
+.ranking-item:nth-child(3){border-left-color:#cd7f32;}
+.rank-pos{color:var(--text-dim);text-align:center;}
+.rank-info{display:flex;flex-direction:column;gap:3px;}
+.rank-name{color:var(--text);}.rank-archetype{color:var(--text-dim);font-size:6px;}
+.rank-days{color:var(--gold);text-align:right;}
+.empty-ranking{text-align:center;color:var(--text-dim);font-size:7px;padding:28px;line-height:2.5;}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.card-enter{animation:cardIn 0.35s cubic-bezier(0.25,1,0.5,1) both;}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1a1408;border:1px solid var(--card-border);color:var(--gold);font-size:7px;padding:8px 14px;z-index:1000;opacity:0;transition:opacity 0.3s;text-align:center;max-width:300px;line-height:1.8;pointer-events:none;}
+.toast.show{opacity:1;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bar-bg);}::-webkit-scrollbar-thumb{background:var(--card-border2);}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="screen active" id="screen-title">
+  <div class="title-emblem">⚔️</div>
+  <div class="game-title">GUILD<br>MASTER</div>
+  <div class="subtitle">Every choice has a price.<br>All glory has a cost.</div>
+  <div id="legacy-display"></div>
+  <div class="input-group">
+    <div class="input-label">YOUR GUILD NAME</div>
+    <input type="text" id="guild-input" placeholder="e.g. Order of Flames" maxlength="22">
+  </div>
+  <button class="btn-primary" onclick="startGame()">▶ START</button>
+  <button class="btn-secondary" onclick="showRanking()">🏆 LEADERBOARD</button>
+</div>
+<div class="screen" id="screen-game">
+  <div class="hud-top">
+    <div class="guild-name" id="hud-guild">—</div>
+    <div class="archetype-badge" id="hud-archetype">NOVICE</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="btn-mute" id="btn-mute" onclick="toggleMute()">♪</button>
+      <input type="range" class="volume-slider" id="vol-slider" min="0" max="100" value="55" oninput="setVolume(this.value)">
+      <div class="day-counter">DAY <span id="hud-day">1</span></div>
+    </div>
+  </div>
+  <div class="status-bars">
+    <div class="stat-bar"><div class="stat-label"><span class="stat-name">⚔ CONTROL</span><span class="stat-value" id="val-poder">50</span><span class="stat-warn" id="warn-poder"></span></div><div class="bar-track" id="track-poder"><div class="bar-fill bar-poder" id="bar-poder" style="width:50%"></div></div></div>
+    <div class="stat-bar"><div class="stat-label"><span class="stat-name">💰 GOLD</span><span class="stat-value" id="val-ouro">50</span><span class="stat-warn" id="warn-ouro"></span></div><div class="bar-track" id="track-ouro"><div class="bar-fill bar-ouro" id="bar-ouro" style="width:50%"></div></div></div>
+    <div class="stat-bar"><div class="stat-label"><span class="stat-name">😄 MORALE</span><span class="stat-value" id="val-moral">50</span><span class="stat-warn" id="warn-moral"></span></div><div class="bar-track" id="track-moral"><div class="bar-fill bar-moral" id="bar-moral" style="width:50%"></div></div></div>
+    <div class="stat-bar"><div class="stat-label"><span class="stat-name">📜 RENOWN</span><span class="stat-value" id="val-rep">50</span><span class="stat-warn" id="warn-rep"></span></div><div class="bar-track" id="track-rep"><div class="bar-fill bar-rep" id="bar-rep" style="width:50%"></div></div></div>
+  </div>
+  <div class="recruit-panel" id="recruit-panel"></div>
+  <div class="boss-hp-container" id="boss-hp-container">
+    <div class="boss-hp-header"><span class="boss-name-label">👁 THE VOID HERALD</span><span class="boss-hp-num" id="boss-hp-num">100 HP</span></div>
+    <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width:100%"></div></div>
+    <div class="boss-phase-text" id="boss-phase-text">PHASE I — SHADOWS GATHER</div>
+  </div>
+  <div class="card-area">
+    <div class="choice-hint"><div class="hint-left" id="hint-left">—</div><div class="hint-right" id="hint-right">—</div></div>
+    <div class="card" id="game-card">
+      <div class="card-overlay left" id="overlay-left"></div>
+      <div class="card-overlay right" id="overlay-right"></div>
+      <div class="card-memory-tag" id="card-memory-tag"></div>
+      <span class="card-icon" id="card-icon">⚔️</span>
+      <div class="card-category" id="card-category">ADVENTURE</div>
+      <div class="card-text" id="card-text">Loading...</div>
+      <div class="card-question" id="card-question"></div>
+      <div class="card-divider"></div>
+      <div class="card-npc" id="card-npc">— Messenger —</div>
+    </div>
+    <div class="swipe-buttons" id="swipe-buttons">
+      <button class="btn-swipe btn-swipe-left" id="btn-left" onclick="swipe('left')">◀ NO</button>
+      <button class="btn-swipe btn-swipe-right" id="btn-right" onclick="swipe('right')">YES ▶</button>
+    </div>
+    <div class="btn-neutral-wrap" id="btn-neutral-wrap">
+      <button class="btn-understood" onclick="dismissNeutral()">UNDERSTOOD</button>
+    </div>
+  </div>
+</div>
+<div class="screen" id="screen-gameover">
+  <div class="gameover-skull" id="gameover-icon">💀</div>
+  <div class="gameover-title" id="gameover-title">GUILD DESTROYED</div>
+  <div class="gameover-reason" id="gameover-reason">Something went wrong...</div>
+  <div class="gameover-stats" id="gameover-stats"></div>
+  <div class="archetype-reveal" id="archetype-reveal"></div>
+  <div class="legacy-earned" id="legacy-earned"></div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="restartGame()">↺ NEW GAME</button>
+    <button class="btn-secondary" onclick="showRanking()">🏆 LEADERBOARD</button>
+  </div>
+</div>
+<div class="screen" id="screen-victory">
+  <div class="victory-crown">👑</div>
+  <div class="victory-title">THE VOID HERALD<br>HAS FALLEN</div>
+  <div class="victory-subtitle">Your guild stands victorious.<br>Your name echoes through the ages.</div>
+  <div class="victory-stats" id="victory-stats"></div>
+  <div class="archetype-reveal" id="victory-archetype"></div>
+  <div class="legacy-earned" id="victory-legacy"></div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="restartGame()">↺ PLAY AGAIN</button>
+    <button class="btn-secondary" onclick="showRanking()">🏆 LEADERBOARD</button>
+  </div>
+</div>
+<div class="screen" id="screen-ranking">
+  <div class="ranking-title">🏆 LEADERBOARD</div>
+  <div class="ranking-list" id="ranking-list"></div>
+  <button class="btn-secondary" onclick="showScreen('screen-title')">← BACK</button>
+</div>
+<script>
+// STORAGE — ranking shared, legacy session-only
+let sessionLegacy=null;
+// ══════ SUPABASE CONFIG ══════
+// Replace these two values with your own project after following the setup guide
+const SUPABASE_URL = 'https://fxyesdpuwgkobmfvqeed.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Y2P_bwEgGUTrjhi5GFzHrQ_tOB8nIdp';
+const SB_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Prefer': 'return=minimal'
+};
+
+async function saveRanking(entry) {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    console.warn('Supabase not configured — ranking not saved.');
+    return;
+  }
+  const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+  try {
+    // 1. Fetch current top 10
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/scores?order=days.desc&limit=10`,
+      { headers }
+    );
+    const current = res.ok ? await res.json() : [];
+
+    // 2. Only insert if score qualifies (top 10 not full, or beats the lowest)
+    const qualifies = current.length < 10 || entry.days > current[current.length - 1].days;
+    if (!qualifies) return;
+
+    // 3. Insert the new entry
+    await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        guild_name: entry.name,
+        days: entry.days,
+        archetype: entry.archetype || '',
+        victor: entry.victor || false
+      })
+    });
+
+    // 4. If we now have more than 10, delete the worst entry
+    if (current.length >= 10) {
+      const worst = current[current.length - 1];
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/scores?id=eq.${worst.id}`,
+        { method: 'DELETE', headers }
+      );
+    }
+  } catch (e) {
+    console.warn('saveRanking failed:', e);
+  }
+}
+
+async function loadRanking() {
+  // Fallback empty if not configured
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') return [];
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/scores?order=days.desc&limit=10`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map(r => ({
+      name: r.guild_name,
+      days: r.days,
+      archetype: r.archetype,
+      victor: r.victor
+    }));
+  } catch (e) {
+    console.warn('loadRanking failed:', e);
+    return [];
+  }
+}
+
+// VAULT OVERFLOW (replaces gold_max game over)
+const VAULT_OVERFLOW={id:'vault_overflow',icon:'💸',category:'⚠ TREASURY CRISIS',isSpecial:true,
+text:'Your vault overflows. Tax collectors, thieves guilds, and rival lords all descend at once. The wealth that built your guild now threatens to consume it.',
+question:'Do we distribute the gold to secure our position?',npc:'— Your Frantic Treasurer —',
+left:{label:'Hoard it. Fight them all.',effects:{ouro:-15,poder:-15,rep:-20}},
+right:{label:'Distribute. Buy peace.',effects:{ouro:-35,moral:+15,rep:+10}}};
+
+// Sacrifice card — appears once per run when any stat hits ≤10 and a recruit is alive
+const SACRIFICE_CARD={id:'last_stand',icon:'💔',category:'⚠ LAST STAND',isSpecial:true,isSacrifice:true,
+text:'Your guild teeters on the edge of collapse. One of your recruits steps forward from the ranks — eyes steady, jaw set. "I joined this guild for a reason. Let me give it one more."',
+question:'Do we accept the sacrifice to save the guild?',npc:'— A Loyal Recruit —',
+left:{label:'No. We face this together.',effects:{}},
+right:{label:'We will not forget you.',effects:{}}};
+
+// BASE CARDS — rebalanced, max single effect ±18
+const BASE_CARDS=[
+{id:'wolf_hunt',icon:'🐺',category:'HUNT',text:'A giant wolf terrorizes northern villages. The king offers a generous bounty.',question:'Do we accept the mission to hunt the wolf?',npc:'— Royal Messenger —',left:{label:'We lack the strength.',effects:{poder:-5,moral:-8,rep:-8}},right:{label:'Glory awaits us!',effects:{poder:+6,rep:+8,ouro:+18,moral:-5}}},
+{id:'new_mage',icon:'🔮',category:'RECRUITMENT',text:'A gifted young man knocks on our door wanting to learn magic. Claims he will be the most powerful in the land.',question:'Do we open a spot for the new apprentice?',npc:'— The Hopeful Candidate —',left:{label:'No vacancy.',effects:{rep:-5,moral:-5}},right:{label:'Welcome to the guild!',effects:{moral:+10,ouro:-12,rep:+5},recruitTrigger:'mage'}},
+{id:'tournament',icon:'🏆',category:'TOURNAMENT',text:'The capital summons guilds to the Grand Annual Tournament. Entry costs gold, but the glory is immense.',question:'Do we send our best fighters to the tournament?',npc:'— Capital Herald —',left:{label:'We cannot afford it.',effects:{rep:-8,moral:-8,ouro:+5,poder:0}},right:{label:'Fighting is our destiny!',effects:{rep:+10,ouro:-18,moral:+5}}},
+{id:'potion_merchant',icon:'⚗️',category:'TRADE',text:'A wandering alchemist offers a full stock of healing potions. "Fair price for a saved life," he says.',question:'Do we buy his entire stock of potions?',npc:'— Wandering Alchemist —',left:{label:'Too expensive. Dismiss him.',effects:{moral:-8}},right:{label:'Buy the entire stock.',effects:{ouro:-12,poder:+8,moral:+10}}},
+{id:'member_vacation',icon:'🌴',category:'MANAGEMENT',text:'Three veteran members request a week of rest. "We are exhausted," they say. They are not bluffing.',question:'Do we grant the veterans their rest?',npc:'— The Exhausted Veterans —',left:{label:'Rest after the war.',effects:{poder:0,moral:-12,rep:-5,ouro:0}},right:{label:'You have earned it.',effects:{poder:-8,moral:+12,rep:+5,ouro:-5}}},
+{id:'spy_caught',icon:'🕵️',category:'INTRIGUE',text:'A spy from another guild was captured carrying our maps. What do we do with him?',question:'Do we release the spy in exchange for information?',npc:'— Head of the Guard —',left:{label:'Throw him in the dungeon.',effects:{rep:-5,moral:-5,poder:+5}},right:{label:'Release, but watch him.',effects:{rep:+6,moral:0,poder:-5,ouro:+8}}},
+{id:'orphan_warrior',icon:'👧',category:'RECRUITMENT',text:'A street kid shows up claiming to have trained alone since age 5. Her eyes light up something.',question:'Do we accept the child into the guild?',npc:'— The Nameless Girl —',left:{label:'No place for a child here.',effects:{moral:-8,rep:-5}},right:{label:'Give her a chance.',effects:{moral:+12,ouro:-8,rep:+5}}},
+{id:'plague_rumor',icon:'🤒',category:'CRISIS',text:'Rumors of illness in camp. Could be paranoia, could be real. Quarantine costs time and money.',question:'Do we declare immediate quarantine?',npc:'— The Nervous Healer —',left:{label:'Overreaction. Ignore it.',effects:{ouro:+5,poder:-5,moral:-10,rep:-8}},right:{label:'Quarantine immediately.',effects:{ouro:-8,poder:-5,moral:+10,rep:+6}}},
+{id:'noble_protection',icon:'👑',category:'CONTRACT',text:'A minor noble pays well for permanent protection. However, he is tremendously unpleasant.',question:'Do we accept the noble\'s protection contract?',npc:'— Baron Aldric —',left:{label:'We do not sell our honor.',effects:{ouro:0,moral:+5,rep:+5}},right:{label:'Gold is gold.',effects:{ouro:+18,moral:-8,rep:-5,poder:0}}},
+{id:'legendary_archer',icon:'🏹',category:'RECRUITMENT',text:'A legendary archer is passing through, willing to join — but demands triple pay.',question:'Do we hire the archer at the price she demands?',npc:'— Eris, the Precise —',left:{label:'Absurd price. Refuse.',effects:{moral:-5,rep:-5}},right:{label:'Hire the legend.',effects:{poder:+8,ouro:-18,moral:+8,rep:+8},recruitTrigger:'archer'}},
+{id:'dark_ritual',icon:'💀',category:'MYSTERY',text:'A monk offers a forbidden ritual that could grant immense power. The cost is... obscure.',question:'Do we allow the forbidden ritual to be performed?',npc:'— Monk of Shadows —',left:{label:'Dark magic, never.',effects:{rep:+8,moral:+5,poder:0,ouro:0}},right:{label:'Power at any cost.',effects:{poder:+18,moral:-18,rep:-18,ouro:-8}}},
+{id:'tax_increase',icon:'📜',category:'KINGDOM',text:'The king decreed a tax increase on guilds. We can publicly contest it or just pay.',question:'Do we pay the tax without complaint?',npc:'— Tax Collector —',left:{label:'Contest it publicly.',effects:{ouro:+5,rep:-8,moral:+10,poder:-5}},right:{label:'Pay without complaint.',effects:{ouro:-12,rep:+5,moral:-5}}},
+{id:'duel_challenge',icon:'⚔️',category:'HONOR',text:'A rival warrior publicly challenges our best fighter. The whole city is watching.',question:'Do we accept the duel in front of everyone?',npc:'— Roran, the Challenger —',left:{label:'Ignore the insolent.',effects:{rep:-12,moral:-5}},right:{label:'Accept the duel!',effects:{rep:+8,poder:+5,moral:+5}}},
+{id:'monster_bounty',icon:'🐉',category:'HUNT',text:'A swamp creature attacks caravans for weeks. The reward is high, so is the risk.',question:'Do we take on the creature hunt?',npc:'— Desperate Merchant —',left:{label:'Too risky.',effects:{rep:-5,moral:-5}},right:{label:'Accept the mission.',effects:{ouro:+18,rep:+8,moral:-5}}},
+{id:'library_donation',icon:'📚',category:'CULTURE',text:'The royal library requests a donation of rare books we have stored. "For the good of the realm."',question:'Do we donate our rare books to the royal library?',npc:'— Chief Librarian —',left:{label:'They are ours. Refuse.',effects:{rep:-8,moral:-5}},right:{label:'Contribute to knowledge.',effects:{ouro:-5,rep:+8,moral:+10}}},
+{id:'alliance_offer',icon:'🤝',category:'DIPLOMACY',text:'The Steel Guild proposes an alliance. They are powerful but have a questionable underworld reputation.',question:'Do we form an alliance with the Steel Guild?',npc:'— Steel Guild Emissary —',left:{label:'We do not associate with them.',effects:{rep:+8,moral:+5}},right:{label:'Accept the alliance.',effects:{poder:+18,ouro:+8,rep:-8,moral:-5}}},
+{id:'deserter_caught',icon:'🏃',category:'DISCIPLINE',text:'A member fled during a mission. He was recaptured. The whole guild awaits your decision.',question:'Do we give the deserter a second chance?',npc:'— The Guard —',left:{label:'Immediate expulsion.',effects:{moral:-5,rep:+8}},right:{label:'Second chance.',effects:{moral:+5,rep:-5,poder:0,ouro:0}}},
+{id:'secret_passage',icon:'🗺️',category:'EXPLORATION',text:'A mysterious map arrived pointing to a secret passage in a mountain to the east.',question:'Do we send a team to investigate the map?',npc:'— Anonymous Message —',left:{label:'A trap. Ignore it.',effects:{moral:-3}},right:{label:'Investigate the passage.',effects:{ouro:+18,moral:+8,rep:+5}}},
+{id:'food_shortage',icon:'🍞',category:'CRISIS',text:'Supplies are running low. We can ration food or spend gold to restock immediately.',question:'Do we spend gold to restock immediately?',npc:'— Head Cook —',left:{label:'Ration for now.',effects:{ouro:+8,moral:-12}},right:{label:'Restock now.',effects:{ouro:-12,moral:+10,rep:+5}}},
+{id:'bard_visit',icon:'🎵',category:'EVENTS',text:'A famous bard wants to perform at the guild. He charges a lot, but his fame will draw crowds.',question:'Do we hire the bard for one night?',npc:'— Silvio, the Troubadour —',left:{label:'Too expensive.',effects:{moral:-5,rep:-5}},right:{label:'Book him for the night!',effects:{ouro:-8,moral:+18,rep:+8}}},
+{id:'weapon_upgrade',icon:'🔨',category:'EQUIPMENT',text:'The blacksmith developed a revolutionary metal. New armament for the entire guild costs a fortune.',question:'Do we invest in a full arsenal upgrade?',npc:'— Grohn, the Blacksmith —',left:{label:'No budget for this.',effects:{moral:-8}},right:{label:'Modernize the arsenal.',effects:{poder:+8,ouro:-20,moral:+5,rep:+5}}},
+{id:'rival_weakened',icon:'😈',category:'RIVALRY',text:'Our rival guild is weakened by internal illness. We can attack or offer them help.',question:'Do we offer honorable aid to the weakened rival?',npc:'— Our Scout —',left:{label:'Attack while they are weak.',effects:{poder:+6,rep:-18,moral:-8,ouro:+8}},right:{label:'Offer honorable aid.',effects:{rep:+10,moral:+8,poder:-5,ouro:-8}}},
+{id:'magic_artifact',icon:'💎',category:'ARTIFACT',text:'A magical artifact is for sale. Nobody knows what it does. The seller avoids questions.',question:'Do we buy the artifact without knowing what it is?',npc:'— Mysterious Seller —',left:{label:'Suspicious. Refuse.',effects:{rep:+5}},right:{label:'Buy the unknown.',effects:{ouro:-12,poder:+12,moral:+5,rep:-5}}},
+{id:'harvest_crisis',icon:'🌾',category:'CRISIS',text:'A drought destroyed crops nearby. Villagers beg for help.',question:'Do we share our supplies with the villagers?',npc:'— Desperate Peasant —',left:{label:'We need what is ours.',effects:{rep:-12,moral:-8,ouro:+5,poder:0}},right:{label:'Share what we have.',effects:{rep:+8,moral:+8,ouro:-12}}},
+{id:'old_enemy',icon:'😤',category:'PAST',text:'An old enemy sends a message asking for peace. "I have changed." Seems sincere. Maybe.',question:'Do we accept the old enemy\'s peace offer?',npc:'— Sealed Letter —',left:{label:'I do not believe in change.',effects:{rep:-5,moral:-5}},right:{label:'Accept the peace.',effects:{rep:+8,moral:+8,poder:-5,ouro:+5}}},
+{id:'training_camp',icon:'🏋️',category:'TRAINING',text:'A weapons master proposes 2 weeks of intensive training. Members are off missions during this period.',question:'Do we pause all missions for intensive training?',npc:'— Master Karos —',left:{label:'We cannot stop now.',effects:{moral:-5,ouro:+5}},right:{label:'Invest in the training.',effects:{poder:+8,moral:+5,ouro:-12,rep:+5}}},
+{id:'kingdom_crisis',icon:'🔥',category:'KINGDOM',text:'The kingdom faces a political crisis. The king requests public support from guilds.',question:'Do we publicly declare support for the king?',npc:'— Royal Emissary —',left:{label:'Stay neutral.',effects:{rep:-5,poder:0,moral:0,ouro:+5}},right:{label:'Support the king.',effects:{rep:+8,moral:-5,ouro:-8}}},
+{id:'prophecy',icon:'🔮',category:'MYSTERY',text:'"A great battle approaches," says the seer. "Save strength now or prepare now?"',question:'Do we trust the prophecy and prepare the guild now?',npc:'— Blind Seer Elara —',left:{label:'Save resources.',effects:{ouro:+8,moral:-3}},right:{label:'Prepare intensively.',effects:{poder:+12,ouro:-8,moral:-5,rep:+8}}},
+{id:'new_headquarters',icon:'🏰',category:'EXPANSION',text:'An abandoned fortress is available. It would be our new headquarters — imposing and strategic.',question:'Do we buy the fortress as our new base?',npc:'— Kingdom Broker —',left:{label:'Not a priority.',effects:{rep:-5,moral:-5}},right:{label:'Buy the fortress!',effects:{ouro:-18,rep:+8,moral:+8}}},
+{id:'cursed_gold',icon:'🪙',category:'MYSTERY',text:'A chest full of gold arrived anonymously. Too beautiful to be honest. It may be cursed.',question:'Do we keep the gold without investigating?',npc:'— Gold With No Sender —',left:{label:'Do not touch it. Return.',effects:{rep:+8,moral:+5}},right:{label:'Gold has no owner.',effects:{ouro:+20,rep:-12,moral:-8,poder:0}}},
+{id:'festival_invite',icon:'🎉',category:'SOCIAL',text:'The city invites the guild to the Festival of Stars. Attendance strengthens bonds with the people.',question:'Do we attend with full pomp and ceremony?',npc:'— City Mayor —',left:{label:'No time for a festival.',effects:{rep:-8,moral:-8,ouro:+5,poder:0}},right:{label:'Attend with full pomp!',effects:{rep:+8,moral:+12,ouro:-8}}},
+{id:'mole_found',icon:'👁️',category:'INTRIGUE',text:'We discovered someone in the guild is selling secrets. We do not know who.',question:'Do we confront everyone openly about the traitor?',npc:'— Suspicious Captain —',left:{label:'Investigate quietly.',effects:{moral:-5,rep:+5}},right:{label:'Confront everyone now.',effects:{moral:-12,rep:-8}}},
+{id:'traveling_healer',icon:'💊',category:'HEALTH',text:'A healer asks for temporary shelter. In return, she will treat injured guild members for free.',question:'Do we host the healer at our headquarters?',npc:'— Wandering Healer —',left:{label:'We do not host strangers.',effects:{moral:-5,poder:0,rep:-5,ouro:0}},right:{label:'Welcome, healer.',effects:{poder:+8,moral:+10,rep:+5,ouro:0},recruitTrigger:'cleric'}},
+{id:'gambling_night',icon:'🎲',category:'SOCIAL',text:'Members organize a game night to boost morale. Betting can get expensive if it goes wrong.',question:'Do we allow the gambling night?',npc:'— The Eager Members —',left:{label:'Forbid the gambling.',effects:{moral:-8,ouro:+5,poder:0,rep:+5}},right:{label:'Let them have fun!',effects:{moral:+12,ouro:-8,poder:-5,rep:-5}}},
+{id:'rogue_recruit',icon:'🗡️',category:'RECRUITMENT',text:'A thief was caught stealing from a corrupt merchant. Rather than turning him in, he offers his skills to the guild. "I only steal from those who deserve it," he says.',question:'Do we recruit the rogue into our ranks?',npc:'— The Thief in the Shadows —',left:{label:'We are no criminal den.',effects:{rep:+5,moral:+5}},right:{label:'Useful skills. Welcome.',effects:{ouro:+8,rep:-5},recruitTrigger:'rogue'}},
+{id:'knight_recruit',icon:'🛡️',category:'RECRUITMENT',text:'A disgraced knight arrives at our gates, stripped of his title for defying a corrupt lord. He seeks redemption through honorable service.',question:'Do we accept the disgraced knight into our guild?',npc:'— The Fallen Knight —',left:{label:'We cannot risk the politics.',effects:{rep:-5,moral:-5}},right:{label:'Honor needs no title.',effects:{poder:+12,rep:+8,moral:+8,ouro:-8},recruitTrigger:'knight'}},
+];
+const MEMORY_CARDS=[
+{id:'spy_returned',icon:'🕵️',category:'MEMORY',memoryTag:'⚡ PAST CONSEQUENCE',text:'The spy you released returned with valuable intelligence about the enemy.',question:'Do we accept the information he brought?',npc:'— The Grateful Spy —',trigger:{cardId:'spy_caught',dir:'right'},left:{label:'Refuse.',effects:{rep:+5,poder:-8,moral:-5,ouro:0}},right:{label:'Accept his help.',effects:{poder:+12,ouro:+12,rep:+5,moral:+5}}},
+{id:'mage_mission',icon:'🔮',category:'MEMORY',memoryTag:'⚡ APPRENTICE GREW UP',text:'The young mage you took in is ready. First solo mission. Hopeful and nervous.',question:'Do we send the apprentice on his first solo mission?',npc:'— The Ready Apprentice —',trigger:{cardId:'new_mage',dir:'right'},left:{label:'Wait longer.',effects:{moral:-5,poder:-5,ouro:0,rep:0}},right:{label:'Trust him.',effects:{poder:+12,moral:+12,rep:+8,ouro:+8}}},
+{id:'alliance_reinforcements',icon:'🤝',category:'MEMORY',memoryTag:'⚡ ALLIANCE RESPONDED',text:'The Steel Guild keeps their word. They sent fighters in a critical moment.',question:'Do we accept the reinforcements they sent?',npc:'— Allied Reinforcements —',trigger:{cardId:'alliance_offer',dir:'right'},left:{label:'Dismiss them.',effects:{poder:-8,rep:-8,moral:-8,ouro:0}},right:{label:'Accept the support.',effects:{poder:+18,moral:+8,rep:+5,ouro:0}}},
+{id:'village_revenge',icon:'🏘️',category:'MEMORY',memoryTag:'⚡ THEY REMEMBER',text:'A village you ignored was destroyed. Survivors arrive and blame your guild for your absence.',question:'Do we take in the survivors who blame us?',npc:'— Furious Survivors —',trigger:{cardId:'wolf_hunt',dir:'left'},left:{label:'Deny responsibility.',effects:{rep:-18,moral:-8,poder:-5,ouro:0}},right:{label:'Take in the refugees.',effects:{rep:+5,moral:+8,poder:-5,ouro:-12}}},
+{id:'orphan_grown',icon:'⚔️',category:'MEMORY',memoryTag:'⚡ THE GIRL GREW UP',text:'The child you took in just won her first solo duel. The entire guild is celebrating.',question:'Do we promote her to guild officer?',npc:'— The Warrior She Became —',trigger:{cardId:'orphan_warrior',dir:'right'},left:{label:'Keep her in training.',effects:{moral:+5,poder:+5,ouro:-5,rep:0}},right:{label:'Promote her to officer!',effects:{moral:+18,poder:+8,rep:+12,ouro:-5}}},
+];
+
+// RECRUIT CARDS — more aggressive riskDelta
+const RECRUIT_CARDS={
+mage:[
+{id:'mage_tome',icon:'📖',category:'MAGE — STUDIES',recruitClass:'mage',text:'The mage wants to study a forbidden sorcery tome. "Knowledge has no morality," he argues.',question:'Do we allow him to study the forbidden tome?',npc:'— The Eager Mage —',left:{label:'Too risky. Forbid it.',effects:{poder:-5,rep:+5},riskDelta:-15},right:{label:'Knowledge is power.',effects:{poder:+10,ouro:-10,moral:-5},riskDelta:+22}},
+{id:'mage_duel',icon:'🔥',category:'MAGE — DUEL',recruitClass:'mage',text:'The mage publicly challenged a city rival to a magic duel. Tomorrow at noon.',question:'Do we allow him to go to the duel?',npc:'— The Determined Mage —',left:{label:'Duels are forbidden.',effects:{moral:-5,rep:-5},riskDelta:-8},right:{label:'Let him prove his worth.',effects:{poder:+10,rep:+10},riskDelta:+28}},
+{id:'mage_overload',icon:'💫',category:'MAGE — CRISIS',recruitClass:'mage',text:'The mage collapsed after 3 days with no sleep. Feverish, muttering spells.',question:'Do we force immediate rest and halt the research?',npc:'— Guild Physician —',left:{label:'Continue. It is dedication.',effects:{poder:+5,ouro:-5,moral:-5},riskDelta:+35},right:{label:'Mandatory rest now.',effects:{poder:-5,ouro:-5},riskDelta:-25}},
+{id:'mage_ruins',icon:'🏛️',category:'MAGE — EXPLORATION',recruitClass:'mage',text:'The mage found a portal to ancient ruins. He wants to investigate the artifacts alone.',question:'Do we let the mage go to the ruins alone?',npc:'— The Excited Mage —',left:{label:'Too dangerous alone.',effects:{moral:-5,poder:-5},riskDelta:0},right:{label:'Go, but with an escort.',effects:{ouro:+15,poder:+5,moral:+5},riskDelta:+15}},
+{id:'mage_sorcerer',icon:'🌑',category:'MAGE — THREAT',recruitClass:'mage',text:'A dark sorcerer wrote to the mage, promising limitless power for his allegiance.',question:'Do we confront the sorcerer to protect our mage?',npc:'— Dark Letter —',left:{label:'Hide the mage. Flee.',effects:{rep:-10,moral:-5},riskDelta:+28},right:{label:'Confront the sorcerer.',effects:{poder:+10,rep:+5},riskDelta:+18}},
+{id:'mage_experiment',icon:'🧪',category:'MAGE — INCIDENT',recruitClass:'mage',text:'The mage\'s experiment accidentally created a creature now roaming headquarters.',question:'Do we force the mage to undo it immediately?',npc:'— Terrified Members —',left:{label:'Study the creature.',effects:{poder:+5,ouro:+10,moral:-15},riskDelta:+30},right:{label:'Undo everything now.',effects:{ouro:-10,moral:+5},riskDelta:-15}},
+{id:'mage_noble_offer',icon:'💰',category:'MAGE — PROPOSAL',recruitClass:'mage',text:'A noble offers a fortune for the mage to work exclusively for his family.',question:'Do we prevent the mage from accepting the offer?',npc:'— Noble\'s Envoy —',left:{label:'He can go if he wants.',effects:{ouro:+18,poder:-15,moral:-10},riskDelta:+8},right:{label:'Refuse — he is ours.',effects:{ouro:-5,moral:+5,poder:+5},riskDelta:-8}},
+{id:'mage_familiar',icon:'🦉',category:'MAGE — FAMILIAR',recruitClass:'mage',text:'The mage brought a magic owl that can spy on enemies. But it consumes resources.',question:'Do we accept the magic familiar at headquarters?',npc:'— The Mage with the Owl —',left:{label:'No room for an animal.',effects:{moral:-5},riskDelta:0},right:{label:'Accept the familiar.',effects:{poder:+5,moral:+8,ouro:-8},riskDelta:-8}},
+{id:'mage_solo_trip',icon:'🌍',category:'MAGE — JOURNEY',recruitClass:'mage',text:'The mage wants to leave alone for 2 weeks to study an artifact in a distant city.',question:'Do we let the mage travel alone for 2 weeks?',npc:'— The Determined Mage —',left:{label:'Too long away.',effects:{poder:-5,moral:-8},riskDelta:+5},right:{label:'Let him go.',effects:{poder:+10,ouro:+10},riskDelta:+35}},
+{id:'mage_teach',icon:'📚',category:'MAGE — TEACHING',recruitClass:'mage',text:'The mage wants to create a magic study program for recruits. It costs time and gold.',question:'Do we approve the magic education program?',npc:'— The Teacher Mage —',left:{label:'No time for this.',effects:{poder:-5,moral:-5},riskDelta:0},right:{label:'Invest in education.',effects:{poder:+10,moral:+10,ouro:-12},riskDelta:-8}},
+],
+archer:[
+{id:'arc_bow',icon:'🏹',category:'ARCHER — EQUIPMENT',recruitClass:'archer',text:'The archer wants an elvish bow worth a small fortune. "It is the best there is."',question:'Do we buy the elvish bow for her?',npc:'— Eris, Archer —',left:{label:'Too expensive. Refuse.',effects:{moral:-5},riskDelta:+8},right:{label:'Invest in the best.',effects:{poder:+10,ouro:-18},riskDelta:-8}},
+{id:'arc_train',icon:'🎯',category:'ARCHER — TRAINING',recruitClass:'archer',text:'The archer created a shooting program for beginners. The results are impressive.',question:'Do we officially sponsor the shooting program?',npc:'— Eris, Instructor —',left:{label:'No resources for this.',effects:{moral:-8},riskDelta:0},right:{label:'Support the training.',effects:{poder:+10,moral:+8,ouro:-8},riskDelta:-8}},
+{id:'arc_noble',icon:'⚖️',category:'ARCHER — TROUBLE',recruitClass:'archer',text:'The archer was caught hunting on a noble\'s reserved land. He demands compensation or imprisonment.',question:'Do we pay the compensation to free the archer?',npc:'— Noble\'s Official —',left:{label:'She sorts it herself.',effects:{moral:-10,rep:-5},riskDelta:+28},right:{label:'Pay and free her.',effects:{ouro:-18,rep:-5},riskDelta:-20}},
+{id:'arc_love',icon:'💘',category:'ARCHER — ROMANCE',recruitClass:'archer',text:'The archer fell in love with a messenger from an enemy kingdom. She is distracted on missions.',question:'Do we forbid the relationship to protect the guild?',npc:'— Worried Companion —',left:{label:'Forbid it. Too dangerous.',effects:{moral:-15},riskDelta:+12},right:{label:'Love is life. Allow it.',effects:{moral:+10,rep:-5},riskDelta:0}},
+{id:'arc_bet',icon:'🎲',category:'ARCHER — WAGER',recruitClass:'archer',text:'The archer wagered her elvish bow in a shooting competition. Confident. Perhaps overconfident.',question:'Do we stop the wager before she loses the bow?',npc:'— Eris, Challenger —',left:{label:'Not our business.',effects:{ouro:+12,poder:-10},riskDelta:+28},right:{label:'Intervene now.',effects:{rep:-5,moral:-5},riskDelta:-12}},
+{id:'arc_shortcut',icon:'🌲',category:'ARCHER — ROUTE',recruitClass:'archer',text:'The archer wants to use a shortcut through a cursed forest for an urgent mission. Saves 3 days.',question:'Do we approve the shortcut through the cursed forest?',npc:'— Eris, at the Map —',left:{label:'Safe route, always.',effects:{ouro:-5},riskDelta:0},right:{label:'Efficiency above all.',effects:{ouro:+15,poder:+5},riskDelta:+35}},
+{id:'arc_record',icon:'🏅',category:'ARCHER — COMPETITION',recruitClass:'archer',text:'The archer attempts to break the kingdom\'s historical shooting record with a huge crowd watching.',question:'Do we sponsor the record attempt?',npc:'— Eris, Competitive —',left:{label:'Unnecessary distraction.',effects:{moral:-5,rep:-5},riskDelta:0},right:{label:'Let everyone see us!',effects:{rep:+18,moral:+8,ouro:-8},riskDelta:+12}},
+{id:'arc_scout',icon:'🔭',category:'ARCHER — MISSION',recruitClass:'archer',text:'The archer asked to scout the enemy camp alone. Silent. Efficient. Reckless.',question:'Do we approve the solo scouting mission?',npc:'— Eris, Determined —',left:{label:'Too risky alone.',effects:{moral:-5},riskDelta:0},right:{label:'She is the best. Let her go.',effects:{poder:+10,ouro:+10,rep:+5},riskDelta:+35}},
+{id:'arc_trophy',icon:'🐗',category:'ARCHER — INCIDENT',recruitClass:'archer',text:'The archer brought a beast head as a trophy. The beast\'s family — druids — demands compensation.',question:'Do we pay the druids their compensation?',npc:'— Furious Druids —',left:{label:'Ignore the druids.',effects:{rep:-12,moral:-5},riskDelta:+20},right:{label:'Pay and make peace.',effects:{ouro:-12,rep:+8},riskDelta:-12}},
+{id:'arc_wounded',icon:'🩸',category:'ARCHER — CRISIS',recruitClass:'archer',text:'The archer returned gravely wounded from an unauthorized mission. She told no one where she was going.',question:'Do we investigate what she was doing?',npc:'— Guild Healer —',left:{label:'Heal first, ask later.',effects:{ouro:-8,moral:+5},riskDelta:-12},right:{label:'Interrogate before treating.',effects:{moral:-12,rep:-5},riskDelta:+28}},
+],
+cleric:[
+{id:'cle_shrine',icon:'⛪',category:'CLERIC — DEVOTION',recruitClass:'cleric',text:'The cleric wants to build a shrine in the center of headquarters. "Blessings for the guild."',question:'Do we approve the construction of the shrine?',npc:'— The Devout Cleric —',left:{label:'Does not fit the budget.',effects:{moral:-5,rep:-5},riskDelta:+8},right:{label:'May faith guide us.',effects:{moral:+12,rep:+8,ouro:-18},riskDelta:-8}},
+{id:'cle_mission',icon:'🌿',category:'CLERIC — MISSION',recruitClass:'cleric',text:'The cleric wants to travel to a distant village to perform mass healing. He will be away 2 weeks.',question:'Do we let the cleric leave on a healing mission?',npc:'— The Compassionate Cleric —',left:{label:'We need him here.',effects:{moral:-8},riskDelta:0},right:{label:'Holy mission approved.',effects:{rep:+12,moral:+8,ouro:-5},riskDelta:+20}},
+{id:'cle_heresy',icon:'📜',category:'CLERIC — FAITH',recruitClass:'cleric',text:'The cleric found a manuscript that contradicts all official Church doctrines.',question:'Do we allow him to investigate the manuscript?',npc:'— The Troubled Cleric —',left:{label:'Burn it. Too dangerous.',effects:{rep:+5,moral:-5},riskDelta:-8},right:{label:'Truth must be sought.',effects:{poder:+5,moral:+5,rep:-8},riskDelta:+22}},
+{id:'cle_exorcism',icon:'👻',category:'CLERIC — OCCULT',recruitClass:'cleric',text:'The cleric wants to perform an exorcism on a member who has been acting strangely.',question:'Do we allow the exorcism ritual?',npc:'— The Alarmed Cleric —',left:{label:'It is superstition. Forbid it.',effects:{moral:-5},riskDelta:0},right:{label:'Better safe than sorry.',effects:{moral:+5,poder:+5,ouro:-5},riskDelta:+12}},
+{id:'cle_refuse',icon:'⚔️',category:'CLERIC — DILEMMA',recruitClass:'cleric',text:'The cleric refused to heal a gravely wounded enemy prisoner. A moral standoff.',question:'Do we force the cleric to perform the healing?',npc:'— Captain of the Guards —',left:{label:'It is his decision.',effects:{rep:-8,moral:-5},riskDelta:+12},right:{label:'Healing all is the law.',effects:{rep:+8,moral:+5},riskDelta:-8}},
+{id:'cle_pilgrims',icon:'🚶',category:'CLERIC — FAME',recruitClass:'cleric',text:'His healings attracted hundreds of pilgrims to headquarters. Wonderful and problematic.',question:'Do we openly welcome all pilgrims?',npc:'— The Overwhelmed Cleric —',left:{label:'Send them all away.',effects:{rep:-8,moral:-8,ouro:+5},riskDelta:0},right:{label:'Open the doors.',effects:{rep:+18,moral:+5,ouro:+8,poder:-5},riskDelta:+5}},
+{id:'cle_inquisitor',icon:'🔎',category:'CLERIC — THREAT',recruitClass:'cleric',text:'The Church sent an inquisitor to question the cleric\'s practices. He is visibly worried.',question:'Do we defend the cleric before the inquisitor?',npc:'— Inquisitor Ruthven —',left:{label:'We stay out of it.',effects:{rep:-5,moral:-8},riskDelta:+28},right:{label:'Defend with everything.',effects:{rep:-8,moral:+8,poder:+5},riskDelta:-20}},
+{id:'cle_resurrection',icon:'✨',category:'CLERIC — RITUAL',recruitClass:'cleric',text:'The cleric claims he can bring back a fallen member. "Only once," he says. "With a cost."',question:'Do we allow the resurrection attempt?',npc:'— The Determined Cleric —',left:{label:'The dead do not return.',effects:{moral:-5,rep:-5},riskDelta:0},right:{label:'Attempt the impossible.',effects:{poder:+12,moral:+12,ouro:-22},riskDelta:+25}},
+{id:'cle_tithe',icon:'💸',category:'CLERIC — DONATION',recruitClass:'cleric',text:'We discovered the cleric donates 20% of the guild treasury to the temple without asking us.',question:'Do we forbid the unauthorized donations?',npc:'— Furious Treasurer —',left:{label:'Forbid and reprimand.',effects:{ouro:+12,moral:-8,rep:-5},riskDelta:+12},right:{label:'Allow with a limit.',effects:{ouro:-8,moral:+8,rep:+5},riskDelta:-8}},
+{id:'cle_vision',icon:'🌟',category:'CLERIC — VISION',recruitClass:'cleric',text:'The cleric had a divine vision during sleep and wants to act on it immediately.',question:'Do we follow the guidance of the cleric\'s vision?',npc:'— The Enlightened Cleric —',left:{label:'Visions are not orders.',effects:{moral:-8,rep:-5},riskDelta:+5},right:{label:'Faith guides us.',effects:{poder:+8,moral:+8,ouro:-12},riskDelta:+18}},
+],
+archmage:[
+{id:'arqm_school',icon:'🏫',category:'ARCHMAGE — LEGACY',recruitClass:'archmage',text:'The Archmage proposes founding the kingdom\'s first school of magic under our banner.',question:'Do we invest in founding the school of magic?',npc:'— The Visionary Archmage —',left:{label:'Too grandiose.',effects:{poder:-5,rep:-5},riskDelta:0},right:{label:'Let magic flourish.',effects:{poder:+15,rep:+20,ouro:-28,moral:+8},riskDelta:-5}},
+{id:'arqm_portal',icon:'🌀',category:'ARCHMAGE — CRISIS',recruitClass:'archmage',text:'The Archmage opened a dimensional portal he cannot close. Creatures start to pass through.',question:'Do we order the Archmage to seal the portal at any cost?',npc:'— The Pale Archmage —',left:{label:'Seal it. Now.',effects:{poder:-10,ouro:-12},riskDelta:-25},right:{label:'Study the creatures first.',effects:{poder:+10,ouro:+8},riskDelta:+40}},
+{id:'arqm_golem',icon:'🗿',category:'ARCHMAGE — CREATION',recruitClass:'archmage',text:'The Archmage created a stone golem that obeys only him. Guardian... or threat?',question:'Do we allow the golem to guard headquarters?',npc:'— The Creator Archmage —',left:{label:'Too dangerous to keep.',effects:{poder:-5,moral:-5},riskDelta:-5},right:{label:'Power that protects.',effects:{poder:+18,rep:+8,ouro:-8},riskDelta:+8}},
+{id:'arqm_king',icon:'👑',category:'ARCHMAGE — PROPOSAL',recruitClass:'archmage',text:'The king wants the Archmage as a royal weapon. Offers a title and land.',question:'Do we prevent the Archmage from accepting the royal post?',npc:'— Royal Emissary —',left:{label:'Let him go if he wants.',effects:{poder:-12,rep:+5},riskDelta:+12},right:{label:'He belongs to the guild.',effects:{poder:+5,rep:-12,moral:+5},riskDelta:-5}},
+{id:'arqm_rival',icon:'⚡',category:'ARCHMAGE — CONFRONTATION',recruitClass:'archmage',text:'The northern Archmage declared personal war on ours. A decisive arcane duel is set.',question:'Do we support our Archmage in this duel?',npc:'— Northern Messenger —',left:{label:'Not our war.',effects:{poder:-8,moral:-12},riskDelta:+5},right:{label:'The guild stands by its own.',effects:{poder:+15,rep:+12,ouro:-12},riskDelta:+25}},
+{id:'arqm_corruption',icon:'🌫️',category:'ARCHMAGE — DANGER',recruitClass:'archmage',text:'The Archmage\'s magic is causing strange dreams in members near him.',question:'Do we force safe distance between the Archmage and members?',npc:'— Disturbed Members —',left:{label:'They are just dreams.',effects:{moral:-8,poder:-5},riskDelta:+28},right:{label:'Caution above all.',effects:{moral:+5,poder:-8},riskDelta:-18}},
+{id:'arqm_grimoire',icon:'📕',category:'ARCHMAGE — WORK',recruitClass:'archmage',text:'The Archmage wrote a grimoire that could change the course of magic in the world.',question:'Do we support the publication of the grimoire?',npc:'— The Proud Archmage —',left:{label:'Secrets stay here.',effects:{poder:+5,rep:-8},riskDelta:0},right:{label:'Share the knowledge.',effects:{rep:+18,poder:+5,ouro:+8},riskDelta:+5}},
+{id:'arqm_transcend',icon:'💠',category:'ARCHMAGE — FATE',recruitClass:'archmage',text:'The Archmage speaks of a ritual to transcend humanity. "I will be more than man or mage."',question:'Do we allow the transcendence ritual?',npc:'— The Archmage at the Edge —',left:{label:'Let him remain human.',effects:{moral:+5,poder:-5},riskDelta:-5},right:{label:'Let him reach the impossible.',effects:{poder:+25,moral:-18,rep:-8},riskDelta:+30}},
+{id:'arqm_prophecy',icon:'📿',category:'ARCHMAGE — FATE',recruitClass:'archmage',text:'A prophecy says the Archmage will destroy a city. He does not believe it. Others do.',question:'Do we keep the Archmage despite the prophecy?',npc:'— Northern Seer —',left:{label:'Distance him until we know.',effects:{poder:-10,moral:-8},riskDelta:-12},right:{label:'Trust him.',effects:{poder:+5,rep:-8,moral:+5},riskDelta:+12}},
+{id:'arqm_price',icon:'💎',category:'ARCHMAGE — BETRAYAL',recruitClass:'archmage',text:'An enemy kingdom offers triple pay to the Archmage. A letter was intercepted by our spy.',question:'Do we confront the Archmage about the letter?',npc:'— The Loyal Spy —',left:{label:'Ignore it. He is loyal.',effects:{poder:+5,rep:-5},riskDelta:+12},right:{label:'Confront with transparency.',effects:{moral:+8,poder:-5},riskDelta:-12}},
+],
+guardsmaster:[
+{id:'gua_network',icon:'🕸️',category:'GUARDSMASTER — ESPIONAGE',recruitClass:'guardsmaster',text:'The Guardsmaster built a spy network that only she controls. Efficient, but we have no access.',question:'Do we demand full access to her spy network?',npc:'— The Shadow Guardsmaster —',left:{label:'Full trust in her.',effects:{poder:+10,rep:-5},riskDelta:+12},right:{label:'Transparency or nothing.',effects:{poder:-5,moral:+5},riskDelta:-5}},
+{id:'gua_assassination',icon:'🗡️',category:'GUARDSMASTER — DILEMMA',recruitClass:'guardsmaster',text:'The Guardsmaster received an assassination contract for a kingdom enemy. She asks our opinion.',question:'Do we authorize the assassination mission?',npc:'— The Guardsmaster, Serious —',left:{label:'Never. We have limits.',effects:{rep:+8,moral:+5,poder:-5},riskDelta:-5},right:{label:'Sometimes it is necessary.',effects:{poder:+12,rep:-12,ouro:+18},riskDelta:+18}},
+{id:'gua_bounty',icon:'🎯',category:'GUARDSMASTER — TROUBLE',recruitClass:'guardsmaster',text:'Enemies placed a high bounty on the Guardsmaster. Bounty hunters are closing in.',question:'Do we pay hunters to leave us alone?',npc:'— Hired Detective —',left:{label:'Let them come. We are strong.',effects:{poder:+5,moral:-5},riskDelta:+28},right:{label:'Pay to end the problem.',effects:{ouro:-18,poder:-5},riskDelta:-18}},
+{id:'gua_infiltrate',icon:'🏯',category:'GUARDSMASTER — MISSION',recruitClass:'guardsmaster',text:'The Guardsmaster wants to infiltrate the enemy\'s main castle alone. Impossible mission.',question:'Do we approve this impossible infiltration?',npc:'— The Confident Guardsmaster —',left:{label:'Suicide. Forbidden.',effects:{poder:-5,moral:-5},riskDelta:0},right:{label:'If anyone can, it\'s her.',effects:{poder:+15,ouro:+18,rep:+8},riskDelta:+40}},
+{id:'gua_map',icon:'🗺️',category:'GUARDSMASTER — POWER',recruitClass:'guardsmaster',text:'The Guardsmaster holds maps of ALL political secrets of the kingdom. Immense and dangerous.',question:'Do we keep the maps at guild headquarters?',npc:'— The Powerful Guardsmaster —',left:{label:'Too dangerous to keep.',effects:{rep:+5,poder:-8},riskDelta:-5},right:{label:'Information is power.',effects:{poder:+18,rep:-8,ouro:+12},riskDelta:+12}},
+{id:'gua_disappeared',icon:'🌑',category:'GUARDSMASTER — MYSTERY',recruitClass:'guardsmaster',text:'The Guardsmaster vanished for 4 days. Returned with gold, minor wounds and no explanation.',question:'Do we demand a full explanation of her disappearance?',npc:'— The Silent Guardsmaster —',left:{label:'Trust without questioning.',effects:{ouro:+18,moral:-8},riskDelta:+12},right:{label:'Full explanation. Now.',effects:{moral:+5,poder:-5},riskDelta:-5}},
+{id:'gua_rebel',icon:'⚔️',category:'GUARDSMASTER — CONFLICT',recruitClass:'guardsmaster',text:'The Guardsmaster is leading a group of dissatisfied members. Tension is rising inside the guild.',question:'Do we confront the Guardsmaster directly?',npc:'— Loyal Captain —',left:{label:'Ignore it for now.',effects:{moral:-12,poder:-5},riskDelta:+18},right:{label:'Talk to her openly.',effects:{moral:+8,poder:-5},riskDelta:-12}},
+{id:'gua_grudge',icon:'😤',category:'GUARDSMASTER — REVENGE',recruitClass:'guardsmaster',text:'The Guardsmaster wants to personally avenge a mercenary who wounded her in the past.',question:'Do we stop her personal revenge?',npc:'— The Cold Guardsmaster —',left:{label:'Let her act.',effects:{moral:-8,rep:-8,poder:+10},riskDelta:+18},right:{label:'Stop her. Not worth it.',effects:{moral:+5,poder:-5},riskDelta:-12}},
+{id:'gua_treaty',icon:'📜',category:'GUARDSMASTER — AUTONOMY',recruitClass:'guardsmaster',text:'The Guardsmaster negotiated a secret treaty with a neighboring kingdom without our approval.',question:'Do we honor the treaty she negotiated?',npc:'— Kingdom Diplomat —',left:{label:'Cancel everything.',effects:{rep:-12,poder:-5},riskDelta:+18},right:{label:'Honor it. She knows best.',effects:{rep:+8,poder:+5,ouro:+8},riskDelta:-5}},
+{id:'gua_gift',icon:'🎁',category:'GUARDSMASTER — SUSPICION',recruitClass:'guardsmaster',text:'The Guardsmaster received an expensive gift from the enemy chief. May be a trap. Or diplomacy.',question:'Do we carefully examine the gift before deciding?',npc:'— The Intrigued Guardsmaster —',left:{label:'Throw it away. Too risky.',effects:{rep:-5},riskDelta:-5},right:{label:'Examine it carefully.',effects:{rep:+8,ouro:+12},riskDelta:+12}},
+],
+highpriest:[
+{id:'sum_relic',icon:'✨',category:'HIGH PRIEST — RELIC',recruitClass:'highpriest',text:'The High Priest obtained a holy relic said to cure any wound.',question:'Do we install the relic at guild headquarters?',npc:'— The High Priest —',left:{label:'Better in a safe temple.',effects:{rep:+5,poder:-5},riskDelta:0},right:{label:'Here it protects us.',effects:{poder:+12,moral:+12,rep:+8},riskDelta:-12}},
+{id:'sum_holy_war',icon:'⚔️',category:'HIGH PRIEST — WAR',recruitClass:'highpriest',text:'The High Priest declared a holy war on a neighboring guild for "temple desecration".',question:'Do we support the holy war he declared?',npc:'— The Ardent High Priest —',left:{label:'Undo the declaration.',effects:{rep:+8,moral:-8,poder:-8},riskDelta:-5},right:{label:'Faith justifies everything.',effects:{poder:+12,rep:-18,moral:-5,ouro:-12},riskDelta:+25}},
+{id:'sum_judgment',icon:'⚖️',category:'HIGH PRIEST — JUDGMENT',recruitClass:'highpriest',text:'The High Priest is judging members for "lack of faith." Severe punishments without our approval.',question:'Do we stop the internal judgments immediately?',npc:'— Frightened Members —',left:{label:'He has divine authority.',effects:{moral:-12,rep:-8},riskDelta:+18},right:{label:'Judgments go through us.',effects:{moral:+8,rep:+5,poder:-5},riskDelta:-12}},
+{id:'sum_miracle',icon:'🌟',category:'HIGH PRIEST — MIRACLE',recruitClass:'highpriest',text:'The High Priest performed a public miracle. The king invited him to the throne.',question:'Do we allow him to accept the king\'s palace invitation?',npc:'— Royal Emissary —',left:{label:'He stays with us.',effects:{poder:-5,rep:-8,moral:-5},riskDelta:0},right:{label:'He represents the guild.',effects:{rep:+22,poder:+8,ouro:+8},riskDelta:+12}},
+{id:'sum_corruption',icon:'💰',category:'HIGH PRIEST — CORRUPTION',recruitClass:'highpriest',text:'Members report the High Priest has started charging for his healings. A serious contradiction.',question:'Do we confront the High Priest about the charges?',npc:'— Disappointed Members —',left:{label:'Ignore it for now.',effects:{moral:-12,rep:-8,ouro:+8},riskDelta:+18},right:{label:'Confront him immediately.',effects:{moral:+8,rep:+5,ouro:-5},riskDelta:-12}},
+{id:'sum_army',icon:'⛪',category:'HIGH PRIEST — POWER',recruitClass:'highpriest',text:'The High Priest wants to use his faithful as an auxiliary army for the guild.',question:'Do we incorporate the faithful as military forces?',npc:'— The High Priest —',left:{label:'Faith is not a soldier.',effects:{moral:-5,poder:-5},riskDelta:0},right:{label:'Fighting faith is strong.',effects:{poder:+18,moral:+5,ouro:-8},riskDelta:+12}},
+{id:'sum_excommunication',icon:'📜',category:'HIGH PRIEST — CRISIS',recruitClass:'highpriest',text:'The Official Church wants to excommunicate him. This would affect our reputation with half the kingdom.',question:'Do we publicly defend the High Priest?',npc:'— Church Cardinal —',left:{label:'We stay out of it.',effects:{rep:-8,moral:-8},riskDelta:+20},right:{label:'Defend with everything.',effects:{rep:-5,moral:+12,poder:+8},riskDelta:-12}},
+{id:'sum_blessing',icon:'🙏',category:'HIGH PRIEST — RITUAL',recruitClass:'highpriest',text:'The High Priest blessed the entire guild. But the ritual left something strange in the air.',question:'Do we investigate what the ritual left behind?',npc:'— Restless Members —',left:{label:'Trust in the sacred.',effects:{moral:+5,poder:+5},riskDelta:+12},right:{label:'Investigate the phenomenon.',effects:{poder:+5,moral:-5,ouro:-5},riskDelta:-5}},
+{id:'sum_transcend',icon:'☀️',category:'HIGH PRIEST — ASCENSION',recruitClass:'highpriest',text:'The High Priest speaks of transcending the mortal plane. "My mission here is complete."',question:'Do we stop the High Priest\'s ascension?',npc:'— The Radiant High Priest —',left:{label:'Let him go in peace.',effects:{poder:-8,moral:+8,rep:-5},riskDelta:+5},right:{label:'His mission continues here.',effects:{poder:+5,moral:-8},riskDelta:-8}},
+{id:'sum_prophecies',icon:'🌙',category:'HIGH PRIEST — FATE',recruitClass:'highpriest',text:'The High Priest\'s prophecies are coming true one by one. The kingdom pays attention.',question:'Do we use the prophecies as a political tool?',npc:'— Kingdom Nobles —',left:{label:'Keep it from politics.',effects:{rep:-5,moral:+5},riskDelta:0},right:{label:'Power is power.',effects:{rep:+18,poder:+8,moral:-8},riskDelta:+12}},
+],
+rogue:[
+{id:'rog_heist',icon:'💰',category:'ROGUE — HEIST',recruitClass:'rogue',text:'The rogue proposes robbing a corrupt tax collector\'s vault. The gold would go to the guild — and the people.',question:'Do we authorize the heist?',npc:'— The Rogue, Grinning —',left:{label:'Too risky. Absolutely not.',effects:{moral:-5,rep:+5},riskDelta:+5},right:{label:'For the greater good.',effects:{ouro:+22,rep:-12,moral:+8},riskDelta:+25}},
+{id:'rog_blackmail',icon:'📜',category:'ROGUE — LEVERAGE',recruitClass:'rogue',text:'The rogue obtained compromising letters about a powerful noble. He wants to use them as leverage.',question:'Do we use the letters as blackmail?',npc:'— The Rogue, Smiling —',left:{label:'We are not extortionists.',effects:{rep:+8,moral:+5},riskDelta:-8},right:{label:'Information is currency.',effects:{ouro:+18,rep:-15,moral:-8},riskDelta:+20}},
+{id:'rog_spy_net',icon:'🕵️',category:'ROGUE — ESPIONAGE',recruitClass:'rogue',text:'The rogue proposes building a city-wide spy network. Costly, but information would flow to us constantly.',question:'Do we fund the spy network?',npc:'— The Rogue, Serious —',left:{label:'Too expensive and risky.',effects:{ouro:+5,poder:-5},riskDelta:0},right:{label:'Fund the network.',effects:{ouro:-20,rep:+12,poder:+8},riskDelta:+12}},
+{id:'rog_wanted',icon:'🚨',category:'ROGUE — TROUBLE',recruitClass:'rogue',text:'City guards posted a wanted poster for someone matching the rogue\'s description exactly. He claims mistaken identity.',question:'Do we hide the rogue from the city guard?',npc:'— The Rogue, Nervous —',left:{label:'He must face justice.',effects:{rep:+8,moral:+5},riskDelta:+28},right:{label:'We protect our own.',effects:{rep:-12,poder:+5,moral:-5},riskDelta:-18}},
+{id:'rog_gamble',icon:'🎲',category:'ROGUE — WAGER',recruitClass:'rogue',text:'The rogue bet a significant portion of the guild treasury in an underground card game — without asking. He says he can double it.',question:'Do we let him continue playing to win it back?',npc:'— The Rogue, Sweating —',left:{label:'Pull him out now.',effects:{ouro:-12,moral:-5},riskDelta:-10},right:{label:'Trust his instincts.',effects:{ouro:+20,moral:-10},riskDelta:+35}},
+{id:'rog_disguise',icon:'🎭',category:'ROGUE — INFILTRATION',recruitClass:'rogue',text:'The rogue wants to infiltrate the enemy guild\'s annual banquet disguised as a noble. High risk, high intelligence value.',question:'Do we approve the infiltration mission?',npc:'— The Rogue, Confident —',left:{label:'Too risky. Deny it.',effects:{poder:-5,moral:-5},riskDelta:0},right:{label:'Get us that intelligence.',effects:{rep:+15,poder:+8},riskDelta:+30}},
+{id:'rog_fence',icon:'💎',category:'ROGUE — TRADE',recruitClass:'rogue',text:'The rogue has a black market contact selling stolen goods at a fraction of their value. Equipment, potions, artifacts.',question:'Do we use the rogue\'s black market contact?',npc:'— The Rogue\'s Fence —',left:{label:'We deal honestly only.',effects:{rep:+8,moral:+5},riskDelta:-5},right:{label:'A bargain is a bargain.',effects:{ouro:+15,poder:+8,rep:-10},riskDelta:+15}},
+{id:'rog_betrayal',icon:'🔪',category:'ROGUE — SUSPICION',recruitClass:'rogue',text:'A guild member swears he saw the rogue meeting privately with agents of a rival lord. The rogue denies it entirely.',question:'Do we confront the rogue directly about the meeting?',npc:'— Suspicious Guild Member —',left:{label:'Trust him. It\'s nothing.',effects:{moral:-8,rep:-5},riskDelta:+22},right:{label:'Confront him openly.',effects:{moral:+5,rep:+5,poder:-5},riskDelta:-12}},
+{id:'rog_disappear',icon:'🌑',category:'ROGUE — MYSTERY',recruitClass:'rogue',text:'The rogue vanished for three days without notice. He returned with a bag of gold, fresh wounds, and no explanation.',question:'Do we demand an explanation of his absence?',npc:'— The Rogue, Silent —',left:{label:'Trust without asking.',effects:{ouro:+15,moral:-8},riskDelta:+18},right:{label:'Explain yourself. Now.',effects:{moral:+8,rep:+5},riskDelta:-10}},
+{id:'rog_poison',icon:'☠️',category:'ROGUE — CONTRACT',recruitClass:'rogue',text:'A merchant guild offers gold to quietly eliminate a corrupt trade baron causing problems across the region.',question:'Do we accept the assassination contract?',npc:'— Anonymous Letter —',left:{label:'We do not kill for coin.',effects:{rep:+10,moral:+8},riskDelta:-10},right:{label:'One less corrupt lord.',effects:{ouro:+25,rep:-18,moral:-15},riskDelta:+30}},
+],
+knight:[
+{id:'kni_duel_honor',icon:'⚔️',category:'KNIGHT — HONOR',recruitClass:'knight',text:'A rival knight publicly questions our guild\'s honor. The knight wants to challenge him to a formal duel.',question:'Do we approve the duel of honor?',npc:'— The Knight, Furious —',left:{label:'Violence solves nothing.',effects:{rep:-8,moral:-5},riskDelta:+5},right:{label:'Let honor be settled in steel.',effects:{poder:+15,rep:+18,moral:+5},riskDelta:+20}},
+{id:'kni_patrol',icon:'🏘️',category:'KNIGHT — DUTY',recruitClass:'knight',text:'Villagers beg the guild to assign the knight to patrol their roads full time. He wants to go, but we lose his presence here.',question:'Do we allow the knight to patrol the villages?',npc:'— The Knight, Eager —',left:{label:'We need him here.',effects:{poder:-5,moral:-5},riskDelta:0},right:{label:'His duty is to the people.',effects:{rep:+15,moral:+12,poder:-8},riskDelta:+15}},
+{id:'kni_code',icon:'📜',category:'KNIGHT — CODE',recruitClass:'knight',text:'The knight refuses to carry out an order he considers dishonorable, citing his knightly code. The guild is split.',question:'Do we force him to follow orders regardless of his code?',npc:'— The Knight, Resolute —',left:{label:'Orders are orders.',effects:{poder:+5,moral:-12,rep:-5},riskDelta:+15},right:{label:'Honor his convictions.',effects:{moral:+12,rep:+8,poder:-5},riskDelta:-8}},
+{id:'kni_squire',icon:'👦',category:'KNIGHT — TRAINING',recruitClass:'knight',text:'The knight wants to take on a young squire and train him in the knightly arts. It costs time and gold.',question:'Do we allow the knight to take a squire?',npc:'— The Knight, Hopeful —',left:{label:'Too costly right now.',effects:{moral:-5},riskDelta:0},right:{label:'Invest in the next generation.',effects:{poder:+10,moral:+10,ouro:-12},riskDelta:-5}},
+{id:'kni_tournament_honor',icon:'🏆',category:'KNIGHT — TOURNAMENT',recruitClass:'knight',text:'The knight has been invited to a prestigious invitational tournament for elite fighters across the kingdom.',question:'Do we sponsor his entry into the tournament?',npc:'— Tournament Herald —',left:{label:'We cannot spare him.',effects:{poder:-5,moral:-5},riskDelta:0},right:{label:'Represent our guild with honor.',effects:{poder:+12,rep:+20,ouro:-15},riskDelta:+18}},
+{id:'kni_traitor_lord',icon:'🗡️',category:'KNIGHT — DILEMMA',recruitClass:'knight',text:'The corrupt lord who stripped our knight of his title is in the city. The knight wants justice — publicly, if needed.',question:'Do we allow the knight to publicly confront his former lord?',npc:'— The Knight, Trembling —',left:{label:'Not worth the political risk.',effects:{moral:-8,rep:-5},riskDelta:+12},right:{label:'Let him have his justice.',effects:{moral:+15,rep:-12,poder:+8},riskDelta:+25}},
+{id:'kni_bodyguard',icon:'🛡️',category:'KNIGHT — CONTRACT',recruitClass:'knight',text:'A wealthy widow offers substantial payment for the knight to serve as her personal bodyguard for a month.',question:'Do we take the bodyguard contract?',npc:'— The Wealthy Widow —',left:{label:'He is not for hire.',effects:{moral:+5,rep:+5},riskDelta:0},right:{label:'A month\'s gold is a month\'s gold.',effects:{ouro:+20,poder:-10,moral:-5},riskDelta:+10}},
+{id:'kni_wounded',icon:'🩸',category:'KNIGHT — CRISIS',recruitClass:'knight',text:'The knight came back gravely wounded. He refuses healing until his fallen comrades are honored first.',question:'Do we force him to accept healing immediately?',npc:'— Guild Healer —',left:{label:'Let him have his ritual.',effects:{poder:-5,moral:+8,rep:+5},riskDelta:+25},right:{label:'Force the treatment now.',effects:{poder:+5,moral:-8,rep:-5},riskDelta:-18}},
+{id:'kni_oath',icon:'✨',category:'KNIGHT — OATH',recruitClass:'knight',text:'The knight proposes a formal oath-swearing ceremony binding all guild members to a code of honor.',question:'Do we hold the guild oath-swearing ceremony?',npc:'— The Knight, Solemn —',left:{label:'Oaths complicate operations.',effects:{moral:-5,rep:-5},riskDelta:0},right:{label:'We stand by a code.',effects:{moral:+15,rep:+12,ouro:-8},riskDelta:-8}},
+{id:'kni_siege',icon:'🏰',category:'KNIGHT — BATTLE',recruitClass:'knight',text:'A neighboring lord asks our knight to lead his forces in a siege. Victory brings wealth and prestige — but it is his war, not ours.',question:'Do we loan the knight to lead the siege?',npc:'— Lord\'s Emissary —',left:{label:'Not our war.',effects:{rep:-5,moral:-3},riskDelta:0},right:{label:'Let him lead the charge.',effects:{poder:+15,ouro:+18,rep:+10},riskDelta:+28}},
+],
+assassin:[
+{id:'ass_contract',icon:'💀',category:'ASSASSIN — WORK',recruitClass:'assassin',text:'The Assassin received a high-profile contract to eliminate a war general. Clean. Untraceable. Enormous payment.',question:'Do we authorize the assassination of the general?',npc:'— The Assassin, Prepared —',left:{label:'Too exposed. Refuse.',effects:{rep:+8,moral:+5},riskDelta:-5},right:{label:'One general, one payment.',effects:{ouro:+28,poder:+8,rep:-20,moral:-15},riskDelta:+25}},
+{id:'ass_guild_war',icon:'⚔️',category:'ASSASSIN — CONFLICT',recruitClass:'assassin',text:'A rival assassination guild declared open war on ours after the Assassin poached one of their contracts.',question:'Do we prepare for open conflict with the rival guild?',npc:'— The Assassin, Calm —',left:{label:'Negotiate a truce.',effects:{ouro:-12,rep:+8},riskDelta:-15},right:{label:'We do not back down.',effects:{poder:+15,rep:-10,ouro:-8},riskDelta:+25}},
+{id:'ass_perfect_crime',icon:'🔑',category:'ASSASSIN — MISSION',recruitClass:'assassin',text:'The Assassin claims she can steal the King\'s signet ring without anyone noticing. Proof of ultimate skill. Utterly insane.',question:'Do we approve the theft of the royal signet?',npc:'— The Assassin, Excited —',left:{label:'Absolutely not.',effects:{rep:+5,moral:+5},riskDelta:-5},right:{label:'If she can do it, let her.',effects:{poder:+10,rep:+15,ouro:+15},riskDelta:+40}},
+{id:'ass_shadow_council',icon:'🌑',category:'ASSASSIN — POWER',recruitClass:'assassin',text:'The Assassin reveals she is a member of a secret shadow council controlling much of the kingdom\'s underground.',question:'Do we leverage her shadow council connections?',npc:'— The Assassin, Revealing —',left:{label:'We want no part of it.',effects:{moral:+8,rep:+5},riskDelta:-5},right:{label:'Use every advantage we have.',effects:{poder:+18,ouro:+15,rep:-12,moral:-10},riskDelta:+15}},
+{id:'ass_ghost',icon:'👻',category:'ASSASSIN — MYSTERY',recruitClass:'assassin',text:'The Assassin has been absent for a week. No one saw her leave. She left no word. This is apparently normal for her.',question:'Do we launch a search for the Assassin?',npc:'— Worried Guild Captain —',left:{label:'She knows what she\'s doing.',effects:{moral:-5},riskDelta:+15},right:{label:'Find her immediately.',effects:{poder:-5,ouro:-8},riskDelta:-12}},
+{id:'ass_witness',icon:'👁️',category:'ASSASSIN — PROBLEM',recruitClass:'assassin',text:'A merchant witnessed the Assassin on a job and threatens to go to the city guard unless paid handsomely.',question:'Do we pay the merchant to ensure his silence?',npc:'— The Blackmailed Merchant —',left:{label:'Let him go. Deny everything.',effects:{rep:-15,moral:-5},riskDelta:+25},right:{label:'Pay him and seal this.',effects:{ouro:-18,rep:+5},riskDelta:-15}},
+{id:'ass_mask',icon:'🎭',category:'ASSASSIN — IDENTITY',recruitClass:'assassin',text:'The Assassin wants to assume a false identity as a noblewoman to gain permanent access to the royal court.',question:'Do we fund the elaborate false identity?',npc:'— The Assassin, Scheming —',left:{label:'Too elaborate. Too risky.',effects:{poder:-5},riskDelta:+5},right:{label:'A spy in the court is priceless.',effects:{rep:+20,poder:+10,ouro:-22},riskDelta:+18}},
+{id:'ass_defection',icon:'📜',category:'ASSASSIN — LOYALTY',recruitClass:'assassin',text:'An intercepted letter suggests an enemy lord has offered the Assassin triple our rate to switch sides.',question:'Do we confront the Assassin about the letter?',npc:'— The Loyal Spy —',left:{label:'Trust her completely.',effects:{poder:+5,moral:-8},riskDelta:+22},right:{label:'Address it directly.',effects:{moral:+8,poder:-5},riskDelta:-12}},
+{id:'ass_weapon',icon:'🗡️',category:'ASSASSIN — EQUIPMENT',recruitClass:'assassin',text:'The Assassin requests funding for a legendary poisoned blade, supposedly one of only three in existence.',question:'Do we purchase the legendary poisoned blade?',npc:'— The Assassin, Eager —',left:{label:'Far too expensive.',effects:{moral:-3},riskDelta:+8},right:{label:'The best weapon for the best killer.',effects:{poder:+20,ouro:-25},riskDelta:-8}},
+{id:'ass_retire',icon:'⚖️',category:'ASSASSIN — FATE',recruitClass:'assassin',text:'The Assassin says this will be her last contract. She wants to retire after one final, very lucrative job.',question:'Do we support her on the final contract?',npc:'— The Assassin, Tired —',left:{label:'We need her. Not yet.',effects:{moral:-10,poder:-5},riskDelta:+10},right:{label:'One last job. Together.',effects:{ouro:+25,poder:+10,moral:+8},riskDelta:+30}},
+],
+champion:[
+{id:'champ_crusade',icon:'⚔️',category:'CHAMPION — CRUSADE',recruitClass:'champion',text:'The Champion proposes leading a crusade to purge a bandit den that has terrorized the region for years.',question:'Do we authorize the Champion\'s crusade?',npc:'— The Champion, Blazing —',left:{label:'Too costly in blood.',effects:{moral:-5},riskDelta:0},right:{label:'Ride out and cleanse it.',effects:{poder:+20,rep:+18,moral:+8,ouro:-12},riskDelta:+20}},
+{id:'champ_king_guard',icon:'👑',category:'CHAMPION — HONOR',recruitClass:'champion',text:'The king personally requested the Champion join the Royal Guard permanently. The title is immense. His departure would hurt.',question:'Do we release the Champion to serve the king?',npc:'— Royal Commander —',left:{label:'He belongs to this guild.',effects:{poder:+5,rep:-10,moral:+5},riskDelta:-5},right:{label:'Serve the king. Serve us all.',effects:{poder:-20,rep:+25,ouro:+15},riskDelta:+10}},
+{id:'champ_legend',icon:'🌟',category:'CHAMPION — REPUTATION',recruitClass:'champion',text:'Ballads about the Champion\'s deeds spread across the kingdom. Pilgrims arrive just to see him.',question:'Do we embrace his growing legend publicly?',npc:'— The Champion, Humble —',left:{label:'Glory brings enemies.',effects:{rep:-5,moral:-5},riskDelta:0},right:{label:'Let the legend grow.',effects:{rep:+22,moral:+12,ouro:+8},riskDelta:+12}},
+{id:'champ_unbeatable',icon:'🏆',category:'CHAMPION — BATTLE',recruitClass:'champion',text:'The Champion has gone undefeated in forty consecutive duels. A mysterious masked challenger has appeared claiming to be his equal.',question:'Do we allow the Champion to accept the mysterious challenge?',npc:'— The Champion, Eager —',left:{label:'Too many unknowns. Refuse.',effects:{rep:-5},riskDelta:0},right:{label:'Let no challenge go unanswered.',effects:{poder:+15,rep:+15},riskDelta:+22}},
+{id:'champ_mercy',icon:'🕊️',category:'CHAMPION — MERCY',recruitClass:'champion',text:'The Champion captured an enemy commander but refuses to execute him, offering mercy instead. The army demands blood.',question:'Do we support the Champion\'s decision to show mercy?',npc:'— The Champion, Steadfast —',left:{label:'Override him. Execute.',effects:{poder:+5,moral:-12,rep:-5},riskDelta:+15},right:{label:'Honor the merciful choice.',effects:{moral:+15,rep:+8,poder:-8},riskDelta:-10}},
+{id:'champ_order',icon:'🏰',category:'CHAMPION — AMBITION',recruitClass:'champion',text:'The Champion wants to found a new order of knights under our guild\'s banner. Expensive. Glorious. Dangerous.',question:'Do we fund the founding of the knightly order?',npc:'— The Champion, Visionary —',left:{label:'Beyond our means.',effects:{moral:-5,rep:-5},riskDelta:0},right:{label:'Build a legacy in steel.',effects:{poder:+22,rep:+20,ouro:-28,moral:+8},riskDelta:+10}},
+{id:'champ_curse',icon:'💀',category:'CHAMPION — CRISIS',recruitClass:'champion',text:'The Champion returned from his last battle cursed by a dark mage. He loses control of his strength at night.',question:'Do we seek a cure regardless of cost?',npc:'— The Frightened Healer —',left:{label:'It will pass on its own.',effects:{moral:-8,poder:-5},riskDelta:+30},right:{label:'Find a cure. Whatever it costs.',effects:{ouro:-22,poder:+8,moral:+10},riskDelta:-22}},
+{id:'champ_betrayal',icon:'🗡️',category:'CHAMPION — DOUBT',recruitClass:'champion',text:'A defeated enemy swears the Champion accepted a bribe to spare him in battle. The Champion denies it absolutely.',question:'Do we publicly clear the Champion\'s name?',npc:'— The Accused Champion —',left:{label:'Let the rumor die quietly.',effects:{rep:-10,moral:-5},riskDelta:+18},right:{label:'Clear his name publicly.',effects:{rep:+12,moral:+10,ouro:-8},riskDelta:-10}},
+{id:'champ_tournament_open',icon:'🎯',category:'CHAMPION — GLORY',recruitClass:'champion',text:'The Champion wants to organize an open tournament in the guild\'s name, open to all fighters in the kingdom.',question:'Do we host the open tournament?',npc:'— The Champion, Excited —',left:{label:'Too costly and disruptive.',effects:{moral:-8,rep:-5},riskDelta:0},right:{label:'Let the world see our strength.',effects:{rep:+22,moral:+15,ouro:-18,poder:+5},riskDelta:+8}},
+{id:'champ_sacrifice',icon:'☀️',category:'CHAMPION — DESTINY',recruitClass:'champion',text:'A great evil threatens a distant village. The Champion wants to face it alone, refusing to put guild members at risk.',question:'Do we let the Champion face it alone?',npc:'— The Champion, Resolved —',left:{label:'We go together or not at all.',effects:{moral:+5,poder:-5},riskDelta:-15},right:{label:'It is his destiny. Let him go.',effects:{poder:+10,rep:+15,moral:-8},riskDelta:+35}},
+],
+};
+const DANGER_CARDS={
+mage:{id:'mage_danger',icon:'⚠️',category:'⚠ DANGER — MAGE',isDanger:true,recruitClass:'mage',text:'The mage is dying. A battle with a shadow entity left him with corrupted magic eating his body alive.',question:'Do we spend everything we have to save him?',npc:'— Desperate Physician —',left:{label:'We lack the resources.',effects:{moral:-5},riskDelta:+35,dangerResult:'risky'},right:{label:'Save him at any cost!',effects:{ouro:-22,moral:+10},riskDelta:-100,dangerResult:'saved'}},
+archer:{id:'arc_danger',icon:'⚠️',category:'⚠ DANGER — ARCHER',isDanger:true,recruitClass:'archer',text:'The archer was captured by bounty hunters. They demand ransom or they will hand her to the enemy.',question:'Do we pay the ransom to free the archer?',npc:'— Bounty Hunter —',left:{label:'We do not negotiate.',effects:{poder:+5,rep:-8},riskDelta:+35,dangerResult:'risky'},right:{label:'Pay and bring her back.',effects:{ouro:-28,moral:+10},riskDelta:-100,dangerResult:'saved'}},
+cleric:{id:'cle_danger',icon:'⚠️',category:'⚠ DANGER — CLERIC',isDanger:true,recruitClass:'cleric',text:'The cleric was accused of heresy by the Church. Execution is scheduled. We must act now.',question:'Do we rescue the cleric before the execution?',npc:'— Urgent Messenger —',left:{label:'We cannot defy the Church.',effects:{rep:+5,moral:-15},riskDelta:+35,dangerResult:'risky'},right:{label:'No member gets left behind.',effects:{poder:+8,rep:-12,ouro:-18},riskDelta:-100,dangerResult:'saved'}},
+rogue:{id:'rog_danger',icon:'⚠️',category:'⚠ DANGER — ROGUE',isDanger:true,recruitClass:'rogue',text:'The rogue was caught by the city guard during a job gone wrong. He is to be publicly hanged at dawn. We have one night.',question:'Do we break the rogue out of prison tonight?',npc:'— Desperate Guild Runner —',left:{label:'He knew the risks.',effects:{moral:-8,rep:+5},riskDelta:+35,dangerResult:'risky'},right:{label:'Nobody hangs for this guild.',effects:{poder:+8,rep:-15,ouro:-18},riskDelta:-100,dangerResult:'saved'}},
+knight:{id:'kni_danger',icon:'⚠️',category:'⚠ DANGER — KNIGHT',isDanger:true,recruitClass:'knight',text:'The knight was ambushed by a dozen assassins on his last patrol. He is barely alive. His code forbids retreat.',question:'Do we send our best fighters to rescue him now?',npc:'— Wounded Scout —',left:{label:'He would not want us to risk it.',effects:{moral:-5,poder:-5},riskDelta:+35,dangerResult:'risky'},right:{label:'We ride. Right now.',effects:{poder:+10,ouro:-15,moral:+8},riskDelta:-100,dangerResult:'saved'}},
+};
+const EVOLUTION_CARDS={
+mage:{id:'mage_evo',icon:'✨',category:'✦ EVOLUTION — MAGE',isEvolution:true,recruitClass:'mage',evolvedClass:'archmage',text:'The mage has reached a threshold few ever touch. The Ascension Ritual to Archmage is available. It is risky. It is final.',question:'Do we send the mage to the Ascension Ritual?',npc:'— The Mage on the Threshold —',left:{label:'He is not ready yet.',effects:{moral:-8},evolutionResult:'denied'},right:{label:'Let the transformation begin!',effects:{poder:+12,moral:+12,ouro:-18},evolutionResult:'accept'}},
+archer:{id:'arc_evo',icon:'✨',category:'✦ EVOLUTION — ARCHER',isEvolution:true,recruitClass:'archer',evolvedClass:'guardsmaster',text:'The archer is ready for the Shadow Trial. A ritual that will transform her into a Guardsmaster — deadlier, darker.',question:'Do we send the archer to the Shadow Trial?',npc:'— The Archer on the Threshold —',left:{label:'She is perfect as she is.',effects:{moral:-8},evolutionResult:'denied'},right:{label:'Let the shadows take her.',effects:{poder:+12,rep:+8,ouro:-12},evolutionResult:'accept'}},
+cleric:{id:'cle_evo',icon:'✨',category:'✦ EVOLUTION — CLERIC',isEvolution:true,recruitClass:'cleric',evolvedClass:'highpriest',text:'The cleric received a divine calling for the Supreme Ordination. He will become High Priest.',question:'Do we support the cleric\'s Supreme Ordination?',npc:'— The Called Cleric —',left:{label:'Too much responsibility.',effects:{moral:-8},evolutionResult:'denied'},right:{label:'Let the ordination happen.',effects:{poder:+8,moral:+18,rep:+12,ouro:-18},evolutionResult:'accept'}},
+rogue:{id:'rog_evo',icon:'✨',category:'✦ EVOLUTION — ROGUE',isEvolution:true,recruitClass:'rogue',evolvedClass:'assassin',text:'The rogue has been contacted by the legendary Shadow Brotherhood. To become an Assassin, he must pass their initiation. There is no coming back from this path.',question:'Do we allow the rogue to join the Shadow Brotherhood?',npc:'— The Rogue, at the Crossroads —',left:{label:'Stay who you are.',effects:{moral:-8},evolutionResult:'denied'},right:{label:'Embrace the shadows.',effects:{poder:+12,ouro:+15,rep:-8,moral:-8},evolutionResult:'accept'}},
+knight:{id:'kni_evo',icon:'✨',category:'✦ EVOLUTION — KNIGHT',isEvolution:true,recruitClass:'knight',evolvedClass:'champion',text:'A sacred trial of valor awaits — the Trial of the Champion. Passing it means transcending knighthood and becoming a living legend. Failing it means death.',question:'Do we send the knight to face the Trial of the Champion?',npc:'— The Knight, Ready —',left:{label:'The risk is too great.',effects:{moral:-8},evolutionResult:'denied'},right:{label:'Let him reach his destiny.',effects:{poder:+18,rep:+15,moral:+10,ouro:-15},evolutionResult:'accept'}},
+};
+
+// BOSS SYSTEM
+const BOSS_NEUTRALS=[
+{id:'boss1',icon:'👁️',category:'— UNKNOWN PRESENCE —',isBossNeutral:true,bossStage:1,text:'A hooded figure was spotted near the guild gates at midnight. He left no message. Your watchmen say his shadow moved in the wrong direction — against the torchlight.',question:null,npc:'— Night Watchman\'s Report —'},
+{id:'boss2',icon:'👁️',category:'— VOID HERALD —',isBossNeutral:true,bossStage:2,text:'Three merchants were found dead near our supply route. Their gold untouched. Their guild contracts — every single one — were taken. The killer left a single black feather at each scene.',question:null,npc:'— City Guard Report —'},
+{id:'boss3',icon:'👁️',category:'— VOID HERALD —',isBossNeutral:true,bossStage:3,text:'A letter arrived sealed in black wax bearing a symbol none of your scholars recognize. Inside, a single line in red ink: "I have been watching you grow. The harvest approaches. — The Void Herald."',question:null,npc:'— Sealed Letter, Origin Unknown —'},
+];
+const BOSS_DAYS=[18,28,36];
+const BOSS_FIGHT_DAY=44;
+const BOSS_FIGHT_TEXTS={
+1:['The Void Herald\'s shadow stretches across the battlefield, tendrils of darkness draining the strength from your warriors.','He raises his void staff. Reality darkens around him. Your members feel cold despite the summer heat.','An ancient whisper fills the air — the voices of guilds he has already consumed.'],
+2:['The Void Herald tears open a rift in reality. The battlefield shudders. Members closest to him scream.','He channels the souls of fallen guilds. Their pain becomes a weapon aimed at everything you built.','A wave of pure void energy crashes over your formation. The gold in your vault rattles against the walls.'],
+3:['Wounded and desperate, the Herald\'s attacks grow erratic — but more powerful than ever.','He screams in an ancient tongue. Stone cracks. Glass shatters. His form flickers like dying fire.','You can see through him now. For the first time, the Void Herald looks... afraid.'],
+};
+
+const ARCHETYPES=[
+{key:'poder',title:'The Conqueror',desc:'Your iron grip commands the guild. Discipline and authority define everything.',icon:'⚔️'},
+{key:'ouro',title:'The Miser',desc:'Gold above all. Perhaps a bit too much above all.',icon:'💰'},
+{key:'moral',title:'The Benevolent',desc:'Your heart guides the clan. For good... and for ill.',icon:'💚'},
+{key:'rep',title:'The Diplomat',desc:'Words are worth more than swords in your hands.',icon:'📜'},
+];
+const ARCHETYPE_BALANCED={title:'The Wise',desc:'Rare balance. Your name will be remembered with respect.',icon:'⚖️'};
+const RECRUIT_META={
+mage:{name:'Mage',icon:'🔮',evolvedName:'Archmage',evolvedClass:'archmage'},
+archer:{name:'Archer',icon:'🏹',evolvedName:'Guardsmaster',evolvedClass:'guardsmaster'},
+cleric:{name:'Cleric',icon:'🙏',evolvedName:'High Priest',evolvedClass:'highpriest'},
+rogue:{name:'Rogue',icon:'🗡️',evolvedName:'Assassin',evolvedClass:'assassin'},
+knight:{name:'Knight',icon:'🛡️',evolvedName:'Champion',evolvedClass:'champion'},
+};
+const EVOLUTION_DAYS=15;
+const DANGER_RISK=65;
+
+let state={};
+function initState(){
+  const L=sessionLegacy;
+  state={guildName:'',day:1,stats:{poder:50,ouro:50,moral:50,rep:50},choiceHistory:[],archetypeScore:{poder:0,ouro:0,moral:0,rep:0},usedCards:new Set(),usedMemoryCards:new Set(),deck:[],currentCard:null,recruits:[],usedRecruitCards:{},cardQueue:[],pendingDangerFor:new Set(),pendingEvoFor:new Set(),vaultTriggered:false,sacrificeUsed:false,bossStage:0,bossActive:false,bossHP:100,bossPhase:1,bossTurn:0};
+  if(L&&L.stat&&state.stats[L.stat]!==undefined) state.stats[L.stat]=Math.min(100,state.stats[L.stat]+L.bonus);
+  shuffleDeck();
+}
+function shuffleDeck(){state.deck=[...BASE_CARDS].sort(()=>Math.random()-0.5);}
+
+// RECRUITS
+function recruitMember(cls){
+  if(state.recruits.filter(r=>r.status==='alive').length>=3||state.recruits.find(r=>(r.class===cls||r.evolvedClass===cls)&&r.status==='alive')) return;
+  const m=RECRUIT_META[cls];
+  state.recruits.push({class:cls,risk:10,status:'alive',dayRecruited:state.day,evolved:false,evolvedClass:null,evoDeniedDay:null});
+  state.usedRecruitCards[cls]=new Set();
+  showToast('✦ '+m.icon+' '+m.name+' joined the guild!');
+  setTimeout(sfx_recruitJoin,200);renderRecruitPanel();
+}
+function getBaseClass(cls){
+  // Maps evolved class back to base class for danger/evolution lookups
+  const map={archmage:'mage',guardsmaster:'archer',highpriest:'cleric',assassin:'rogue',champion:'knight'};
+  return map[cls]||cls;
+}
+function adjustRisk(cls,delta){
+  const r=getRecruit(cls);if(!r)return;
+  r.risk=Math.max(0,Math.min(100,r.risk+delta));
+  const baseCls=getBaseClass(cls);
+  if(r.risk>=DANGER_RISK&&!state.pendingDangerFor.has(baseCls)){
+    const dc=DANGER_CARDS[baseCls];
+    if(dc){state.cardQueue.push({card:dc,priority:10});state.pendingDangerFor.add(baseCls);}
+  }
+}
+function getRecruit(cls){return state.recruits.find(r=>(r.class===cls||r.evolvedClass===cls)&&r.status==='alive');}
+function getRecruitByClass(cls){return state.recruits.find(r=>r.class===cls||r.evolvedClass===cls);}
+function killRecruit(cls){
+  const r=getRecruitByClass(cls);if(!r)return;
+  r.status='dead';const m=RECRUIT_META[cls];
+  showToast('💀 '+(r.evolved?m.evolvedName:m.name)+' has died.');
+  setTimeout(sfx_death,100);state.pendingDangerFor.delete(cls);renderRecruitPanel();
+}
+function evolveRecruit(cls){
+  const r=getRecruit(cls);if(!r)return;
+  const m=RECRUIT_META[cls];
+  r.evolved=true;r.evolvedClass=m.evolvedClass;r.risk=10;
+  state.usedRecruitCards[m.evolvedClass]=new Set();
+  state.pendingEvoFor.delete(cls);
+  showToast('⭐ '+m.name+' evolved into '+m.evolvedName+'!');
+  setTimeout(sfx_evolution,100);renderRecruitPanel();
+}
+function checkEvolutions(){
+  for(const r of state.recruits){
+    if(r.status!=='alive'||r.evolved)continue;
+    if(state.pendingEvoFor.has(r.class))continue;
+    const daysAlive=state.day-r.dayRecruited;
+    const daysSinceDenial=r.evoDeniedDay!=null ? state.day-r.evoDeniedDay : Infinity;
+    // First offer after EVOLUTION_DAYS. Re-offer only 10 days after a denial.
+    if(daysAlive>=EVOLUTION_DAYS&&daysSinceDenial>=10){
+      const ec=EVOLUTION_CARDS[r.class];
+      if(ec){state.cardQueue.push({card:ec,priority:5});state.pendingEvoFor.add(r.class);}
+    }
+  }
+}
+function getRiskStatus(risk){if(risk<40)return'healthy';if(risk<65)return'at-risk';return'critical';}
+function renderRecruitPanel(){
+  if(state.bossActive){
+    document.getElementById('recruit-panel').style.display='none';
+    const bc=document.getElementById('boss-hp-container');bc.style.display='flex';updateBossHPBar();return;
+  }
+  document.getElementById('recruit-panel').style.display='flex';
+  document.getElementById('boss-hp-container').style.display='none';
+  const alive=state.recruits.filter(r=>r.status==='alive');
+  let h='';
+  for(let i=0;i<3;i++){
+    const r=alive[i];
+    if(!r){h+='<div class="recruit-slot-empty"><span>VACANT</span></div>';continue;}
+    const m=RECRUIT_META[r.class];const name=r.evolved?m.evolvedName:m.name;
+    const star=r.evolved?'<span class="recruit-evolved-star">★</span>':'';
+    h+=`<div class="recruit-badge ${getRiskStatus(r.risk)}"><span class="recruit-icon">${m.icon}</span><div class="recruit-info"><span class="recruit-name">${name}</span><span class="recruit-class">${r.evolved?'EVOLVED':'ACTIVE'}</span></div>${star}</div>`;
+  }
+  document.getElementById('recruit-panel').innerHTML=h;
+}
+
+// BOSS
+function calcAttack(){
+  const alive=state.recruits.filter(r=>r.status==='alive');
+  // Base 12 + control/10 + recruits (7 normal, 12 evolved)
+  // This gives: no recruits ~17–22 dmg, full evolved ~53–58 dmg
+  // Boss needs ~4–6 attacks to die with no recruits, ~2 attacks with full evolved team
+  return 12+Math.floor(state.stats.poder/10)+alive.reduce((s,r)=>s+(r.evolved?12:7),0);
+}
+function applyBossDmg(){
+  const dmg={1:{poder:-4,moral:-3},2:{poder:-6,ouro:-4,moral:-3},3:{poder:-8,moral:-6,rep:-4}};
+  const d=dmg[state.bossPhase]||dmg[1];
+  const red=state.recruits.filter(r=>r.status==='alive').length*0.15;
+  for(const[k,v] of Object.entries(d)) state.stats[k]=Math.max(0,Math.min(100,state.stats[k]+Math.round(v*(1-red))));
+}
+function updateBossHPBar(){
+  document.getElementById('boss-hp-fill').style.width=Math.max(0,state.bossHP)+'%';
+  document.getElementById('boss-hp-num').textContent=state.bossHP+' HP';
+  const p={1:'PHASE I — SHADOWS GATHER',2:'PHASE II — VOID UNLEASHED',3:'PHASE III — FINAL STAND'};
+  document.getElementById('boss-phase-text').textContent=p[state.bossPhase]||'';
+}
+function getBossFightCard(){
+  const txts=BOSS_FIGHT_TEXTS[state.bossPhase]||BOSS_FIGHT_TEXTS[1];
+  const txt=txts[state.bossTurn%txts.length];
+  return{id:'boss_fight',icon:'👁️',category:'⚔ BOSS BATTLE',isBossFight:true,text:txt,question:'How do we respond to his assault?',npc:'— The Void Herald —',left:{label:'🛡 DEFEND'},right:{label:'⚔ ATTACK'}};
+}
+function checkBossSchedule(){
+  if(state.bossActive)return null;
+  for(let i=0;i<BOSS_NEUTRALS.length;i++){
+    const bn=BOSS_NEUTRALS[i];
+    if(bn.bossStage>state.bossStage&&state.day>=BOSS_DAYS[i]){state.bossStage=bn.bossStage;return bn;}
+  }
+  if(state.bossStage>=3&&state.day>=BOSS_FIGHT_DAY){
+    state.bossActive=true;state.bossHP=100;state.bossPhase=1;state.bossTurn=0;
+    showToast('⚠ THE VOID HERALD APPEARS!');
+    if(audioCtx&&!muted){
+      setTimeout(()=>sfx_bossReveal(3),100); // final sting before music kicks
+      setTimeout(startBossMusic,2000);        // boss music starts after sting fades
+    }
+    renderRecruitPanel();return getBossFightCard();
+  }
+  return null;
+}
+function handleBossTurn(dir){
+  sfx_cardSwipe();
+  // Boss always attacks first — play attack SFX
+  if(audioCtx&&!muted) sfx_bossAttack();
+  applyBossDmg();updateHUD();
+  const go=checkGameOver();if(go){triggerGameOver(go);return;}
+  if(dir==='right'){
+    const dmg=calcAttack();state.bossHP=Math.max(0,state.bossHP-dmg);
+    state.bossPhase=state.bossHP>66?1:state.bossHP>33?2:3;
+    showToast('⚔ '+dmg+' damage! Boss: '+state.bossHP+' HP.');
+    if(audioCtx&&!muted) setTimeout(sfx_bossHit,120);
+  } else {
+    const h=10,low=Object.entries(state.stats).sort((a,b)=>a[1]-b[1])[0][0];
+    state.stats[low]=Math.min(100,state.stats[low]+h);updateHUD();
+    showToast('🛡 Held the line. +'+h+' '+statLabel(low)+'.');
+  }
+  state.bossTurn++;
+  if(state.bossHP<=0){triggerVictory();return;}
+  updateBossHPBar();
+  const c=cardEl();c.style.transition='opacity 0.25s';c.style.opacity='0.2';
+  setTimeout(()=>{c.style.opacity='1';renderCard(getBossFightCard());},250);
+}
+
+// CARD SELECTION
+function getNextCard(){
+  const bc=checkBossSchedule();if(bc)return bc;
+  if(state.bossActive)return getBossFightCard();
+  if(state.cardQueue.length>0){state.cardQueue.sort((a,b)=>b.priority-a.priority);return state.cardQueue.shift().card;}
+  for(const mc of MEMORY_CARDS){
+    if(state.usedMemoryCards.has(mc.id))continue;
+    const past=state.choiceHistory.find(h=>h.cardId===mc.trigger.cardId);
+    if(past&&past.dir===mc.trigger.dir){const idx=state.choiceHistory.findIndex(h=>h.cardId===mc.trigger.cardId);if(state.choiceHistory.length-idx>=3){state.usedMemoryCards.add(mc.id);return mc;}}
+  }
+  const alive=state.recruits.filter(r=>r.status==='alive');
+  if(alive.length>0&&Math.random()<0.35){
+    const r=alive[Math.floor(Math.random()*alive.length)];
+    const cls=r.evolved?r.evolvedClass:r.class;
+    const pool=RECRUIT_CARDS[cls]||[];const used=state.usedRecruitCards[cls]||new Set();
+    const avail=pool.filter(c=>!used.has(c.id));
+    if(avail.length>0){const card=avail[Math.floor(Math.random()*avail.length)];used.add(card.id);state.usedRecruitCards[cls]=used;return card;}
+  }
+  const low=Object.entries(state.stats).filter(([,v])=>v<30).map(([k])=>k);
+  if(low.length>0&&Math.random()<0.5){
+    const sk=low[0];
+    const rel=state.deck.filter(c=>!state.usedCards.has(c.id)&&Math.max(c.left.effects[sk]||0,c.right.effects[sk]||0)>5);
+    if(rel.length>0){const card=rel[Math.floor(Math.random()*rel.length)];state.usedCards.add(card.id);state.deck=state.deck.filter(c=>c.id!==card.id);return card;}
+  }
+  if(state.deck.length===0){state.usedCards.clear();shuffleDeck();}
+  let card,a=0;
+  do{card=state.deck.shift();a++;}while(state.usedCards.has(card&&card.id)&&a<BASE_CARDS.length);
+  state.usedCards.add(card.id);return card;
+}
+
+// UI
+// UI helpers
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),4500);}
+function updateHUD(){
+  const s=state.stats;document.getElementById('hud-day').textContent=state.day;
+  document.getElementById('hud-guild').textContent=state.guildName.toUpperCase().slice(0,18);
+  for(const k of['poder','ouro','moral','rep']){
+    const v=Math.max(0,Math.min(100,s[k]));
+    document.getElementById('bar-'+k).style.width=v+'%';
+    document.getElementById('val-'+k).textContent=v;
+    // Danger flash on bar track
+    if(v<=15||v>=90){const t=document.getElementById('track-'+k);t.classList.remove('danger');void t.offsetWidth;t.classList.add('danger');}
+    // Warning icon
+    const warn=document.getElementById('warn-'+k);
+    if(warn){
+      if(v<=15){
+        warn.textContent='▼';warn.className='stat-warn low visible';
+      } else if(v>=85){
+        warn.textContent='▲';warn.className='stat-warn high visible';
+      } else {
+        warn.className='stat-warn';warn.textContent='';
+      }
+    }
+  }
+  document.getElementById('hud-archetype').textContent=getCurrentArchetype().title.toUpperCase().slice(0,14);
+}
+function getCurrentArchetype(){
+  const sc=state.archetypeScore,max=Math.max(...Object.values(sc));
+  if(max===0)return ARCHETYPE_BALANCED;
+  const tops=Object.entries(sc).filter(([,v])=>v===max).map(([k])=>k);
+  if(tops.length>1)return ARCHETYPE_BALANCED;
+  return ARCHETYPES.find(a=>a.key===tops[0])||ARCHETYPE_BALANCED;
+}
+function renderCard(card){
+  const el=document.getElementById('game-card');
+  el.classList.remove('card-enter','danger-card','evolution-card','boss-card','boss-fight-card','sacrifice-card');
+  void el.offsetWidth;el.classList.add('card-enter');
+  if(card.isDanger)el.classList.add('danger-card');
+  else if(card.isSacrifice)el.classList.add('sacrifice-card');
+  else if(card.isEvolution)el.classList.add('evolution-card');
+  else if(card.isBossNeutral)el.classList.add('boss-card');
+  else if(card.isBossFight)el.classList.add('boss-fight-card');
+  document.getElementById('card-memory-tag').textContent=card.memoryTag||'';
+  document.getElementById('card-icon').textContent=card.icon;
+  document.getElementById('card-category').textContent=card.category;
+  document.getElementById('card-text').textContent=card.text;
+  document.getElementById('card-question').textContent=card.question||'';
+  document.getElementById('card-npc').textContent=card.npc;
+  const sb=document.getElementById('swipe-buttons'),nw=document.getElementById('btn-neutral-wrap');
+  const bL=document.getElementById('btn-left'),bR=document.getElementById('btn-right');
+  if(card.isBossNeutral){
+    sb.style.display='none';nw.style.display='flex';
+    document.getElementById('hint-left').classList.remove('visible');document.getElementById('hint-right').classList.remove('visible');
+    if(audioCtx&&!muted) setTimeout(()=>sfx_bossReveal(card.bossStage),200);
+  } else if(card.isBossFight){
+    sb.style.display='flex';nw.style.display='none';
+    bL.textContent='🛡 DEFEND';bR.textContent='⚔ ATTACK';
+    bL.className='btn-swipe btn-boss-defend';bR.className='btn-swipe btn-boss-attack';
+    document.getElementById('hint-left').textContent='';document.getElementById('hint-right').textContent='';
+  } else {
+    sb.style.display='flex';nw.style.display='none';
+    bL.textContent='◀ NO';bR.textContent='YES ▶';
+    bL.className='btn-swipe btn-swipe-left';bR.className='btn-swipe btn-swipe-right';
+    if(card.left)document.getElementById('hint-left').textContent='◀ '+card.left.label;
+    if(card.right)document.getElementById('hint-right').textContent=card.right.label+' ▶';
+    document.getElementById('hint-left').classList.remove('visible');document.getElementById('hint-right').classList.remove('visible');
+    document.getElementById('overlay-left').style.opacity=0;document.getElementById('overlay-right').style.opacity=0;
+    if(card.isDanger&&audioCtx&&!muted)setTimeout(sfx_danger,200);
+    else if(card.memoryTag&&audioCtx&&!muted)setTimeout(sfx_memory,200);
+  }
+  resetCardTransform();state.currentCard=card;
+}
+function dismissNeutral(){
+  const c=cardEl();c.style.transition='opacity 0.3s';c.style.opacity='0';
+  setTimeout(()=>{c.style.opacity='1';state.day++;renderCard(getNextCard());updateHUD();},300);
+}
+// DRAG
+let dragState={active:false,startX:0,currentX:0};
+const THRESHOLD=70;
+const cardEl=()=>document.getElementById('game-card');
+function startDrag(e){if(state.currentCard&&state.currentCard.isBossNeutral)return;dragState.active=true;dragState.startX=e.clientX||e.touches?.[0]?.clientX||0;}
+function onDrag(e){
+  if(!dragState.active)return;
+  const x=(e.clientX||e.touches?.[0]?.clientX||dragState.startX)-dragState.startX;
+  dragState.currentX=x;
+  const pct=Math.min(Math.abs(x)/THRESHOLD,1);
+  cardEl().style.transform=`translateX(${x}px) rotate(${x*0.04}deg)`;cardEl().style.transition='none';
+  const hL=document.getElementById('hint-left'),hR=document.getElementById('hint-right');
+  const oL=document.getElementById('overlay-left'),oR=document.getElementById('overlay-right');
+  if(!state.currentCard?.isBossFight){
+    if(x<-15){hL.classList.add('visible');hR.classList.remove('visible');oL.style.opacity=pct*0.8;oR.style.opacity=0;}
+    else if(x>15){hR.classList.add('visible');hL.classList.remove('visible');oR.style.opacity=pct*0.8;oL.style.opacity=0;}
+    else{hL.classList.remove('visible');hR.classList.remove('visible');oL.style.opacity=0;oR.style.opacity=0;}
+  }
+}
+function endDrag(){if(!dragState.active)return;dragState.active=false;const x=dragState.currentX;if(x<-THRESHOLD)swipe('left');else if(x>THRESHOLD)swipe('right');else resetCardTransform();}
+function resetCardTransform(){const c=cardEl();c.style.transition='transform 0.3s cubic-bezier(0.25,1,0.5,1)';c.style.transform='';}
+document.addEventListener('DOMContentLoaded',()=>{
+  const card=document.getElementById('game-card');
+  card.addEventListener('mousedown',startDrag);card.addEventListener('touchstart',e=>startDrag(e),{passive:true});
+  document.addEventListener('mousemove',onDrag);document.addEventListener('touchmove',e=>onDrag(e),{passive:true});
+  document.addEventListener('mouseup',endDrag);document.addEventListener('touchend',endDrag);
+  document.addEventListener('keydown',e=>{if(document.getElementById('screen-game').classList.contains('active')){if(e.key==='ArrowLeft')swipe('left');if(e.key==='ArrowRight')swipe('right');}});
+  showLegacyBanner();
+});
+
+// GAME FLOW
+function startGame(){
+  const name=document.getElementById('guild-input').value.trim();
+  if(!name){showToast('Name your guild first!');return;}
+  initAudio();startMusic();initState();state.guildName=name;
+  if(sessionLegacy&&sessionLegacy.bonus>0) showToast('✦ Legacy of "'+sessionLegacy.guildName+'" active! +'+sessionLegacy.bonus+' '+statLabel(sessionLegacy.stat));
+  updateHUD();renderRecruitPanel();renderCard(getNextCard());showScreen('screen-game');
+}
+function statLabel(k){return{poder:'CONTROL',ouro:'GOLD',moral:'MORALE',rep:'RENOWN'}[k]||k;}
+
+function swipe(dir){
+  const card=state.currentCard;if(!card)return;
+  if(card.isBossNeutral)return;
+  if(card.isBossFight){handleBossTurn(dir);return;}
+  if(audioCtx&&!muted)sfx_cardSwipe();
+  const choice=card[dir];
+  state.choiceHistory.push({cardId:card.id,dir});
+  if(dir==='right'&&choice.recruitTrigger)recruitMember(choice.recruitTrigger);
+  if(card.isDanger){
+    const cls=card.recruitClass; // always base class on danger cards
+    if(choice.dangerResult==='saved'){
+      const r=getRecruit(cls);if(r){r.risk=10;state.pendingDangerFor.delete(cls);}
+      showToast('✦ '+RECRUIT_META[cls].name+' was saved!');
+    } else {
+      const r=getRecruit(cls);
+      if(r){
+        const newRisk=Math.min(100,r.risk+(choice.riskDelta||0));
+        if(newRisk>=85){killRecruit(cls);}
+        else{r.risk=newRisk;state.pendingDangerFor.delete(cls);}
+      }
+    }
+  }
+  if(card.isEvolution){
+    const cls=card.recruitClass;
+    if(choice.evolutionResult==='accept')evolveRecruit(cls);
+    else{
+      // Record denial day so checkEvolutions waits 10 days before re-offering
+      const recruit=state.recruits.find(r=>r.class===cls&&r.status==='alive');
+      if(recruit) recruit.evoDeniedDay=state.day;
+      state.pendingEvoFor.delete(cls);
+      showToast(RECRUIT_META[cls].icon+' Evolution refused.');
+    }
+  }
+  if(card.recruitClass&&choice.riskDelta&&!card.isDanger&&!card.isEvolution)adjustRisk(card.recruitClass,choice.riskDelta);
+  // Reset vault trigger after the overflow card is resolved so it can fire again if gold climbs back
+  if(card.id==='vault_overflow') state.vaultTriggered=false;
+  // Sacrifice outcome
+  if(card.isSacrifice){
+    if(dir==='right'){
+      // Find the first alive recruit and sacrifice them
+      const r=state.recruits.find(r=>r.status==='alive');
+      if(r){
+        const meta=RECRUIT_META[r.class];
+        r.status='dead';
+        state.pendingDangerFor.delete(r.class);
+        // Find which stat is lowest and restore it to 50
+        const lowest=Object.entries(state.stats).sort((a,b)=>a[1]-b[1])[0][0];
+        state.stats[lowest]=50;
+        setTimeout(sfx_death,100);
+        showToast('💔 '+(r.evolved?meta.evolvedName:meta.name)+' gave everything. '+statLabel(lowest).toUpperCase()+' restored to 50.');
+        renderRecruitPanel();
+      }
+    } else {
+      showToast('Your guild faces the abyss together...');
+    }
+  }
+  applyEffects(choice.effects, true);
+  const c=cardEl();
+  c.style.transition='transform 0.4s cubic-bezier(0.4,0,0.8,0.4),opacity 0.4s';
+  c.style.transform=dir==='left'?'translateX(-150%) rotate(-20deg)':'translateX(150%) rotate(20deg)';
+  c.style.opacity='0';
+  setTimeout(()=>{
+    updateHUD();renderRecruitPanel();
+    const go=checkGameOver();if(go){triggerGameOver(go);return;}
+    state.day++;
+    if(state.day%10===0&&!state.bossActive){applyEffects({poder:-2,ouro:-2,moral:-2,rep:-2});updateHUD();showToast('⏳ Time wears on the guild... (−2 all stats)');}
+    checkEvolutions();c.style.opacity='1';renderCard(getNextCard());
+  },380);
+}
+
+function showStatDelta(key, val){
+  const track = document.getElementById('track-'+key);
+  if(!track) return;
+  // Remove any existing delta on this bar
+  const old = track.querySelector('.stat-delta');
+  if(old) old.remove();
+  const el = document.createElement('span');
+  el.className = 'stat-delta ' + (val > 0 ? 'pos' : 'neg');
+  el.textContent = (val > 0 ? '+' : '') + val;
+  track.appendChild(el);
+  // Remove after animation completes
+  setTimeout(() => el.remove(), 2600);
+}
+
+function applyEffects(effects, showDeltas){
+  if(!effects)return;
+  for(const[k,v] of Object.entries(effects)){
+    if(k in state.stats){
+      state.stats[k]=Math.max(0,Math.min(100,state.stats[k]+v));
+      if(v>0)state.archetypeScore[k]=(state.archetypeScore[k]||0)+v;
+      if(k==='ouro'&&state.stats.ouro>=95&&!state.vaultTriggered&&!state.bossActive){
+        state.vaultTriggered=true;state.cardQueue.push({card:VAULT_OVERFLOW,priority:20});
+      }
+      // Sacrifice trigger — any stat hits ≤10, recruit alive, not used yet, not during boss
+      if(!state.sacrificeUsed&&!state.bossActive&&state.stats[k]<=10){
+        const hasRecruit=state.recruits.some(r=>r.status==='alive');
+        if(hasRecruit){
+          state.sacrificeUsed=true;
+          state.cardQueue.push({card:SACRIFICE_CARD,priority:25});
+        }
+      }
+      // Show floating delta if requested and value is non-zero
+      if(showDeltas && v !== 0) showStatDelta(k, v);
+    }
+  }
+}
+
+// GAME OVER / VICTORY
+const GO_REASONS={
+poder_zero:{icon:'💀',title:'GUILD DESTROYED',msg:'Without control, the guild fell into chaos. Members scattered. The kingdom forgot your name.'},
+poder_max:{icon:'👑',title:'ABSOLUTE TYRANNY',msg:'Total control became iron tyranny. Your own members rebelled. The guild was disbanded.'},
+ouro_zero:{icon:'💸',title:'TOTAL BANKRUPTCY',msg:'Without resources, members left. The headquarters was seized for debts.'},
+moral_zero:{icon:'😞',title:'INTERNAL REBELLION',msg:'Morale hit rock bottom. Members rebelled and scattered.'},
+moral_max:{icon:'🎉',title:'FESTIVE ANARCHY',msg:'Too much celebration, too little work. The guild became a laughingstock of the kingdom.'},
+rep_zero:{icon:'🔇',title:'TOTAL INFAMY',msg:'Without reputation, no contracts came. The guild was forgotten.'},
+rep_max:{icon:'⚡',title:'WEIGHT OF FAME',msg:'Impossible expectations. When you failed, the fall was catastrophic.'},
+};
+function checkGameOver(){
+  const s=state.stats;
+  if(s.poder<=0)return'poder_zero';if(s.poder>=100)return'poder_max';
+  if(s.ouro<=0)return'ouro_zero';
+  if(s.moral<=0)return'moral_zero';if(s.moral>=100)return'moral_max';
+  if(s.rep<=0)return'rep_zero';if(s.rep>=100)return'rep_max';
+  return null;
+}
+async function triggerGameOver(reason){
+  stopMusic();stopBossMusic(false);setTimeout(sfx_gameOver,300);
+  const r=GO_REASONS[reason],arch=getCurrentArchetype(),days=state.day;
+  const dead=state.recruits.filter(r=>r.status==='dead').length,evolved=state.recruits.filter(r=>r.evolved).length;
+  document.getElementById('gameover-icon').textContent=r.icon;
+  document.getElementById('gameover-title').textContent=r.title;
+  document.getElementById('gameover-reason').textContent=r.msg;
+  // Map reason to which stat caused death
+  const causeMap={poder_zero:'poder',poder_max:'poder',ouro_zero:'ouro',moral_zero:'moral',moral_max:'moral',rep_zero:'rep',rep_max:'rep'};
+  const causeStat=causeMap[reason]||'';
+  function statRow(icon,label,key){
+    const val=state.stats[key];
+    const isCause=key===causeStat;
+    const style=isCause?'style="color:var(--left-color);font-weight:bold;"':'';
+    const marker=isCause?' ◀ CAUSE':''
+    return `<div class="gameover-stat-row"${isCause?' style="border-left:2px solid var(--left-color);padding-left:6px;"':''}><span>${icon} ${label}${marker}</span><span ${style}>${val}</span></div>`;
+  }
+  document.getElementById('gameover-stats').innerHTML=`
+    <div class="gameover-stat-row"><span>GUILD</span><span>${state.guildName.toUpperCase()}</span></div>
+    <div class="gameover-stat-row"><span>DAYS SURVIVED</span><span>${days}</span></div>
+    <div class="gameover-stat-row"><span>DECISIONS MADE</span><span>${state.choiceHistory.length}</span></div>
+    <div class="gameover-stat-row"><span>RECRUITS LOST</span><span>${dead}</span></div>
+    <div class="gameover-stat-row"><span>EVOLUTIONS</span><span>${evolved}</span></div>
+    ${statRow('⚔️','FINAL CONTROL','poder')}
+    ${statRow('💰','FINAL GOLD','ouro')}
+    ${statRow('😄','FINAL MORALE','moral')}
+    ${statRow('📜','FINAL RENOWN','rep')}
+  `;
+  document.getElementById('archetype-reveal').innerHTML=`<div class="label">YOU WERE KNOWN AS</div><div class="title">${arch.icon} ${arch.title}</div><div class="desc">${arch.desc}</div>`;
+  const lStat=Object.entries(state.archetypeScore).sort((a,b)=>b[1]-a[1])[0]?.[0]||'moral';
+  const lBonus=Math.min(20,Math.floor(days/3));
+  if(lBonus>0){sessionLegacy={guildName:state.guildName,stat:lStat,bonus:lBonus};document.getElementById('legacy-earned').innerHTML=`⬡ LEGACY: Next guild starts with +${lBonus} ${statLabel(lStat)} — inherited from "${state.guildName}"`;}
+  else{sessionLegacy=null;document.getElementById('legacy-earned').innerHTML='⬡ Survived too briefly. No legacy was left.';}
+  await saveRanking({name:state.guildName,days,archetype:arch.title,victor:false});
+  showScreen('screen-gameover');
+}
+async function triggerVictory(){
+  state.bossActive=false;
+  stopBossMusic(false); // stop boss music — no normal music restore, silence is better here
+  stopMusic();
+  setTimeout(sfx_evolution,400);setTimeout(sfx_evolution,1000);setTimeout(sfx_evolution,1600);
+  const arch=getCurrentArchetype(),days=state.day;
+  const alive=state.recruits.filter(r=>r.status==='alive').length,evolved=state.recruits.filter(r=>r.evolved).length;
+  document.getElementById('victory-stats').innerHTML=`<div class="victory-stat-row"><span>GUILD</span><span>${state.guildName.toUpperCase()}</span></div><div class="victory-stat-row"><span>DAYS SURVIVED</span><span>${days}</span></div><div class="victory-stat-row"><span>RECRUITS ALIVE</span><span>${alive}/3</span></div><div class="victory-stat-row"><span>EVOLUTIONS</span><span>${evolved}</span></div><div class="victory-stat-row"><span>⚔️ FINAL CONTROL</span><span>${state.stats.poder}</span></div><div class="victory-stat-row"><span>💰 FINAL GOLD</span><span>${state.stats.ouro}</span></div><div class="victory-stat-row"><span>😄 FINAL MORALE</span><span>${state.stats.moral}</span></div><div class="victory-stat-row"><span>📜 FINAL RENOWN</span><span>${state.stats.rep}</span></div>`;
+  document.getElementById('victory-archetype').innerHTML=`<div class="label">YOU WERE KNOWN AS</div><div class="title">${arch.icon} ${arch.title}</div><div class="desc">${arch.desc}</div>`;
+  sessionLegacy={guildName:state.guildName,stat:'poder',bonus:20};
+  document.getElementById('victory-legacy').innerHTML='⬡ VICTOR\'S LEGACY: Next guild starts with +20 CONTROL — the shadow of your triumph.';
+  await saveRanking({name:state.guildName,days,archetype:arch.title,victor:true});
+  showScreen('screen-victory');
+}
+function restartGame(){showScreen('screen-title');showLegacyBanner();}
+
+async function showRanking(){
+  const list=await loadRanking();
+  const el=document.getElementById('ranking-list');
+  if(list.length===0){el.innerHTML='<div class="empty-ranking">No entries yet.<br><br>Be the first.</div>';}
+  else el.innerHTML=list.map((e,i)=>`<div class="ranking-item"><div class="rank-pos">${i+1}</div><div class="rank-info"><div class="rank-name">${e.name.toUpperCase().slice(0,18)}</div><div class="rank-archetype">${e.victor?'👑 VICTOR — ':''}${e.archetype||'—'}</div></div><div class="rank-days">${e.days} DAY${e.days!==1?'S':''}</div></div>`).join('');
+  showScreen('screen-ranking');
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='screen-title') showLegacyBanner();
+}
+function showLegacyBanner(){
+  const el=document.getElementById('legacy-display');
+  if(sessionLegacy&&sessionLegacy.bonus>0)el.innerHTML=`<div class="legacy-banner">⬡ LEGACY ACTIVE<br><strong>"${sessionLegacy.guildName.toUpperCase()}"</strong> left +${sessionLegacy.bonus} ${statLabel(sessionLegacy.stat)} for your next run.</div>`;
+  else el.innerHTML='';
+}
+
+// AUDIO
+let audioCtx=null,masterGain=null,musicGain=null,sfxGain=null;
+let muted=false,musicPlaying=false,musicScheduler=null,nextBeatTime=0,currentPattern=0;
+const BPM=108,BEAT=60/BPM,BAR=BEAT*4;
+const N={C2:65.41,D2:73.42,E2:82.41,F2:87.31,G2:98,A2:110,C3:130.81,D3:146.83,G3:196,A3:220,B3:246.94,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.26,G5:783.99,A5:880,_:0};
+const MELODIES=[
+[[N.E4,.4],[N._,.1],[N.G4,.4],[N.A4,.8],[N._,.3],[N.G4,.4],[N.E4,.4],[N.D4,.8],[N._,.4],[N.C4,.4],[N.E4,.4],[N.G4,1.2],[N._,.4],[N.A4,.4],[N.G4,.4],[N.E4,1.6]],
+[[N.C5,.4],[N._,.1],[N.B4,.3],[N.G4,.4],[N.E4,.8],[N.D4,.4],[N.E4,.4],[N.G4,.8],[N._,.4],[N.A4,.4],[N.G4,.4],[N.E4,.4],[N.D4,.4],[N.C4,1.6],[N._,.8]],
+[[N.A3,.8],[N.C4,.4],[N.E4,.4],[N.G4,.8],[N._,.4],[N.F4,.4],[N.E4,.4],[N.D4,.8],[N._,.4],[N.E4,.4],[N.G4,.4],[N.A4,.4],[N.G4,.4],[N.E4,1.2],[N._,.4]],
+];
+const BASS=[[N.A2,N.C3,N.G2,N.A2],[N.C3,N.G2,N.A2,N.F2],[N.A2,N.E2,N.F2,N.G2]];
+function makeOsc(f,t,dur,v,type,dest){if(!audioCtx||!f)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.setValueAtTime(v,t+dur*.7);g.gain.linearRampToValueAtTime(0,t+dur);o.connect(g);g.connect(dest||musicGain);o.start(t);o.stop(t+dur+.02);}
+function scheduleKick(t){if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g);g.connect(musicGain);o.start(t);o.stop(t+.22);}
+function scheduleHihat(t,v){if(!audioCtx)return;const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.05,audioCtx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1);const src=audioCtx.createBufferSource(),bpf=audioCtx.createBiquadFilter(),g=audioCtx.createGain();bpf.type='highpass';bpf.frequency.value=8000;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);src.buffer=buf;src.connect(bpf);bpf.connect(g);g.connect(musicGain);src.start(t);src.stop(t+.06);}
+function scheduleSection(st,pat){const mel=MELODIES[pat%MELODIES.length];let t=st;for(const[f,d]of mel){if(f>0)makeOsc(f,t,d*BEAT*.85,.12,'square');t+=d*BEAT;}const bass=BASS[pat%BASS.length];for(let i=0;i<bass.length;i++){makeOsc(bass[i],st+i*BAR,BAR*.6,.18,'triangle');makeOsc(bass[i]*.5,st+i*BAR,BAR*.4,.12,'sine');}for(let b=0;b<4;b++){const bt=st+b*BAR;scheduleKick(bt);scheduleKick(bt+2*BEAT);for(let j=0;j<4;j++)scheduleHihat(bt+j*BEAT,.08);[.5,1.5,2.5,3.5].forEach(o=>scheduleHihat(bt+o*BEAT,.05));}}
+function initAudio(){if(audioCtx)return;try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=.55;masterGain.connect(audioCtx.destination);musicGain=audioCtx.createGain();musicGain.gain.value=.38;musicGain.connect(masterGain);sfxGain=audioCtx.createGain();sfxGain.gain.value=.7;sfxGain.connect(masterGain);const rev=audioCtx.createConvolver();const len=audioCtx.sampleRate*.8,buf=audioCtx.createBuffer(2,len,audioCtx.sampleRate);for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2)*.5;}rev.buffer=buf;const rg=audioCtx.createGain();rg.gain.value=.18;musicGain.connect(rev);rev.connect(rg);rg.connect(masterGain);}catch(e){console.warn('Audio unavailable');}}
+function startMusic(){if(!audioCtx||musicPlaying)return;musicPlaying=true;nextBeatTime=audioCtx.currentTime+.1;scheduleLoop();}
+function scheduleLoop(){if(!musicPlaying)return;const S=4*BAR;while(nextBeatTime<audioCtx.currentTime+S*1.5){scheduleSection(nextBeatTime,currentPattern);currentPattern=(currentPattern+1)%MELODIES.length;nextBeatTime+=S;}musicScheduler=setTimeout(scheduleLoop,S*400);}
+function stopMusic(){musicPlaying=false;clearTimeout(musicScheduler);if(musicGain){musicGain.gain.setTargetAtTime(0,audioCtx.currentTime,.3);setTimeout(()=>{if(musicGain)musicGain.gain.value=.38;},1200);}}
+function setVolume(val){
+  if(!audioCtx) return;
+  const v=parseInt(val)/100;
+  muted=false;
+  masterGain.gain.setTargetAtTime(v,audioCtx.currentTime,.1);
+  const btn=document.getElementById('btn-mute');
+  btn.textContent=v===0?'✕':'♪';
+  btn.style.color=v===0?'var(--text-dim)':'var(--amber)';
+}
+function toggleMute(){
+  muted=!muted;
+  if(masterGain) masterGain.gain.setTargetAtTime(muted?0:.55,audioCtx.currentTime,.3);
+  const btn=document.getElementById('btn-mute');
+  btn.textContent=muted?'✕':'♪';
+  btn.style.color=muted?'var(--text-dim)':'var(--amber)';
+  // Reset slider visual when unmuting
+  if(!muted){
+    const sl=document.getElementById('vol-slider');
+    if(sl) sl.value=55;
+  }
+}
+function sfx_recruitJoin(){if(!audioCtx||muted)return;[N.C4,N.E4,N.G4,N.C5].forEach((f,i)=>makeOsc(f,audioCtx.currentTime+i*.08,.18,.25,'square',sfxGain));}
+function sfx_evolution(){if(!audioCtx||muted)return;const t=audioCtx.currentTime;[[N.G4,.15],[N.C5,.15],[N.E5,.15],[N.G5,.4]].forEach(([f,d],i,arr)=>{const at=t+arr.slice(0,i).reduce((s,[,x])=>s+x+.02,0);makeOsc(f,at,d,.3,'square',sfxGain);makeOsc(f*1.5,at,d,.12,'triangle',sfxGain);});[N.C5,N.E5,N.G5,N.A5].forEach((f,i)=>makeOsc(f,t+.55+i*.06,.25,.15,'sine',sfxGain));}
+function sfx_death(){if(!audioCtx||muted)return;const t=audioCtx.currentTime;let at=t;[[N.A4,.2],[N.F4,.2],[N.D4,.2],[N.A3,.5]].forEach(([f,d])=>{makeOsc(f,at,d,.28,'triangle',sfxGain);at+=d;});const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=60;g.gain.setValueAtTime(.4,at);g.gain.exponentialRampToValueAtTime(.001,at+.4);o.connect(g);g.connect(sfxGain);o.start(at);o.stop(at+.45);}
+function sfx_danger(){if(!audioCtx||muted)return;const t=audioCtx.currentTime;for(let i=0;i<3;i++){makeOsc(N.A4,t+i*.18,.12,.3,'square',sfxGain);makeOsc(N.E4,t+i*.18+.06,.10,.2,'square',sfxGain);}}
+function sfx_gameOver(){if(!audioCtx||muted)return;const t=audioCtx.currentTime;[[N.A4,N.E4,N.C4],[N.G4,N.D4,N.B3],[N.F4,N.C4,N.A3],[N.E4,N.B3,N.G3]].forEach((ch,i)=>{const at=t+i*.35;ch.forEach(f=>makeOsc(f,at,.6,.2,'square',sfxGain));});makeOsc(N.A2,t+1.5,1.2,.25,'sawtooth',sfxGain);}
+function sfx_cardSwipe(){if(!audioCtx||muted)return;const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.06,audioCtx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);const src=audioCtx.createBufferSource(),bpf=audioCtx.createBiquadFilter(),g=audioCtx.createGain();bpf.type='bandpass';bpf.frequency.value=3000;bpf.Q.value=.5;g.gain.setValueAtTime(.15,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.06);src.buffer=buf;src.connect(bpf);bpf.connect(g);g.connect(sfxGain);src.start();src.stop(audioCtx.currentTime+.07);}
+function sfx_memory(){if(!audioCtx||muted)return;const t=audioCtx.currentTime;[N.E5,N.G5,N.A5,N.G5,N.E5].forEach((f,i)=>makeOsc(f,t+i*.07,.22,.18,'sine',sfxGain));}
+
+// ══════ BOSS AUDIO SYSTEM ══════
+// Distinct audio identity for every boss moment — neutral reveals, battle music, impact hits
+
+// Boss neutral card SFX — called per stage (1/2/3), escalating dread
+function sfx_bossReveal(stage){
+  if(!audioCtx||muted) return;
+  const t=audioCtx.currentTime;
+
+  // Stage 1 — distant, unsettling. Low drone + single dissonant interval
+  if(stage===1){
+    // Deep subsonic rumble
+    const lfo=audioCtx.createOscillator(), lfoG=audioCtx.createGain();
+    lfo.type='sine'; lfo.frequency.value=0.8;
+    lfoG.gain.value=18;
+    const drone=audioCtx.createOscillator(), droneG=audioCtx.createGain();
+    drone.type='sawtooth'; drone.frequency.value=55;
+    lfo.connect(lfoG); lfoG.connect(drone.frequency);
+    droneG.gain.setValueAtTime(0,t); droneG.gain.linearRampToValueAtTime(0.22,t+0.4);
+    droneG.gain.setValueAtTime(0.22,t+1.8); droneG.gain.linearRampToValueAtTime(0,t+3.2);
+    drone.connect(droneG); droneG.connect(sfxGain);
+    drone.start(t); drone.stop(t+3.3);
+    lfo.start(t); lfo.stop(t+3.3);
+    // Tritone sting — the "devil's interval"
+    setTimeout(()=>{
+      if(!audioCtx||muted)return;
+      const s=audioCtx.currentTime;
+      makeOsc(110,'sawtooth',s,1.2,0.12,sfxGain);
+      makeOsc(155.6,'sawtooth',s+0.15,1.0,0.08,sfxGain); // tritone above A2
+    },600);
+  }
+
+  // Stage 2 — closer, more aggressive. Heartbeat + dissonant cluster
+  if(stage===2){
+    // Heartbeat pulse x3
+    for(let i=0;i<3;i++){
+      const bt=t+i*0.55;
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(80,bt);
+      o.frequency.exponentialRampToValueAtTime(35,bt+0.18);
+      g.gain.setValueAtTime(0.35,bt); g.gain.exponentialRampToValueAtTime(0.001,bt+0.25);
+      o.connect(g); g.connect(sfxGain); o.start(bt); o.stop(bt+0.3);
+    }
+    // Dissonant chord stab after heartbeat
+    setTimeout(()=>{
+      if(!audioCtx||muted)return;
+      const s=audioCtx.currentTime;
+      [73.4, 110, 155.6, 185].forEach(f=>makeOsc(f,'sawtooth',s,1.8,0.10,sfxGain));
+      // High shriek
+      makeOsc(880,'sine',s+0.3,0.6,0.08,sfxGain);
+      makeOsc(987.8,'sine',s+0.5,0.4,0.06,sfxGain);
+    },1800);
+    // Noise burst
+    const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*0.12,audioCtx.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+    const src=audioCtx.createBufferSource(),lpf=audioCtx.createBiquadFilter(),ng=audioCtx.createGain();
+    lpf.type='lowpass'; lpf.frequency.value=400;
+    ng.gain.setValueAtTime(0.4,t+1.6); ng.gain.exponentialRampToValueAtTime(0.001,t+1.8);
+    src.buffer=buf; src.connect(lpf); lpf.connect(ng); ng.connect(sfxGain);
+    src.start(t+1.6); src.stop(t+1.85);
+  }
+
+  // Stage 3 — the letter. Identity revealed. Full orchestral void sting.
+  if(stage===3){
+    // Silence the world first — brief dip in master gain
+    if(masterGain){
+      masterGain.gain.setTargetAtTime(0.18,t,0.05);
+      masterGain.gain.setTargetAtTime(0.55,t+0.6,0.15);
+    }
+    // Massive low impact
+    const imp=audioCtx.createOscillator(),impG=audioCtx.createGain();
+    imp.type='sine'; imp.frequency.setValueAtTime(50,t+0.1);
+    imp.frequency.exponentialRampToValueAtTime(20,t+0.7);
+    impG.gain.setValueAtTime(0,t+0.1); impG.gain.linearRampToValueAtTime(0.5,t+0.12);
+    impG.gain.exponentialRampToValueAtTime(0.001,t+1.2);
+    imp.connect(impG); impG.connect(sfxGain); imp.start(t+0.1); imp.stop(t+1.3);
+    // Void chord — stacked fifths
+    [55,82.4,110,164.8,220].forEach((f,i)=>{
+      setTimeout(()=>{
+        if(!audioCtx||muted)return;
+        const s=audioCtx.currentTime;
+        makeOsc(f,'sawtooth',s,2.5-i*0.3,0.09,sfxGain);
+      },150+i*120);
+    });
+    // Eerie high whistle descending
+    setTimeout(()=>{
+      if(!audioCtx||muted)return;
+      const s=audioCtx.currentTime;
+      const w=audioCtx.createOscillator(),wg=audioCtx.createGain();
+      w.type='sine'; w.frequency.setValueAtTime(1320,s);
+      w.frequency.exponentialRampToValueAtTime(220,s+2.5);
+      wg.gain.setValueAtTime(0.14,s); wg.gain.exponentialRampToValueAtTime(0.001,s+2.5);
+      w.connect(wg); wg.connect(sfxGain); w.start(s); w.stop(s+2.6);
+    },800);
+    // Final whisper noise
+    setTimeout(()=>{
+      if(!audioCtx||muted)return;
+      const s=audioCtx.currentTime;
+      const nb=audioCtx.createBuffer(1,audioCtx.sampleRate*0.3,audioCtx.sampleRate);
+      const nd=nb.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*0.3;
+      const ns=audioCtx.createBufferSource(),nbpf=audioCtx.createBiquadFilter(),ngg=audioCtx.createGain();
+      nbpf.type='bandpass'; nbpf.frequency.value=1200; nbpf.Q.value=2;
+      ngg.gain.setValueAtTime(0.18,s); ngg.gain.exponentialRampToValueAtTime(0.001,s+0.3);
+      ns.buffer=nb; ns.connect(nbpf); nbpf.connect(ngg); ngg.connect(sfxGain);
+      ns.start(s); ns.stop(s+0.35);
+    },2200);
+  }
+}
+
+// Boss hit SFX — player attacks the boss
+function sfx_bossHit(){
+  if(!audioCtx||muted)return;
+  const t=audioCtx.currentTime;
+  // Metallic clang
+  [440,554,660,880].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='square'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.2-i*0.03,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t+0.32);
+  });
+  // Low thud
+  const o2=audioCtx.createOscillator(),g2=audioCtx.createGain();
+  o2.type='sine'; o2.frequency.setValueAtTime(160,t); o2.frequency.exponentialRampToValueAtTime(40,t+0.15);
+  g2.gain.setValueAtTime(0.4,t); g2.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+  o2.connect(g2); g2.connect(sfxGain); o2.start(t); o2.stop(t+0.22);
+}
+
+// Boss damages player — void pulse hitting the guild
+function sfx_bossAttack(){
+  if(!audioCtx||muted)return;
+  const t=audioCtx.currentTime;
+  // Screen rumble feel — low sawtooth sweep
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='sawtooth'; o.frequency.setValueAtTime(90,t); o.frequency.exponentialRampToValueAtTime(30,t+0.5);
+  g.gain.setValueAtTime(0.28,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.55);
+  o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t+0.6);
+  // Two high dissonant pings
+  setTimeout(()=>{if(!audioCtx||muted)return;makeOsc(740,'sine',audioCtx.currentTime,0.2,0.12,sfxGain);},80);
+  setTimeout(()=>{if(!audioCtx||muted)return;makeOsc(622,'sine',audioCtx.currentTime,0.2,0.10,sfxGain);},160);
+}
+
+// ── BOSS BATTLE MUSIC ──
+// Replaces normal chiptune during fight. Minor key, faster BPM, aggressive saw waves.
+let bossMusicPlaying=false;
+let bossMusicScheduler=null;
+let bossNextBeat=0;
+let bossPattern=0;
+const BOSS_BPM=138;
+const BOSS_BEAT=60/BOSS_BPM;
+const BOSS_BAR=BOSS_BEAT*4;
+
+// Boss melody — A minor, aggressive, fast
+const BOSS_MELODIES=[
+  // Pattern 0 — main threat theme
+  [[N.A4,.2],[N._,.1],[N.C5,.15],[N.A4,.15],[N.G4,.3],[N.F4,.2],[N.E4,.4],
+   [N._,.1],[N.A4,.2],[N.B4,.2],[N.C5,.3],[N.B4,.2],[N.A4,.6],[N._,.2],
+   [N.G4,.2],[N.F4,.2],[N.E4,.2],[N.D4,.2],[N.C4,.2],[N.E4,.2],[N.A3,.8]],
+  // Pattern 1 — tension build
+  [[N.E4,.15],[N.F4,.15],[N.E4,.15],[N.D4,.15],[N.C4,.3],[N._,.1],
+   [N.E4,.15],[N.F4,.15],[N.E4,.15],[N.G4,.3],[N.A4,.4],[N._,.2],
+   [N.A4,.2],[N.G4,.2],[N.F4,.2],[N.E4,.4],[N.D4,.2],[N.C4,.6],[N._,.2],
+   [N.B3,.2],[N.C4,.2],[N.D4,.2],[N.E4,.4],[N.A3,.8]],
+  // Pattern 2 — climax
+  [[N.A4,.3],[N.C5,.15],[N.B4,.15],[N.A4,.3],[N.G4,.15],[N.F4,.15],
+   [N.E4,.6],[N._,.2],[N.D4,.2],[N.E4,.2],[N.F4,.4],[N.E4,.2],
+   [N.D4,.4],[N.C4,.2],[N.B3,.2],[N.A3,.8],[N._,.2],
+   [N.E4,.2],[N.F4,.2],[N.G4,.2],[N.A4,.6],[N._,.2]],
+];
+const BOSS_BASS=[
+  [N.A2,N.A2,N.E2,N.F2],
+  [N.A2,N.C3,N.G2,N.A2],
+  [N.D2,N.A2,N.E2,N.A2],
+];
+
+function startBossMusic(){
+  if(!audioCtx||bossMusicPlaying) return;
+  // Fade out normal music first
+  if(musicPlaying){
+    musicPlaying=false;
+    clearTimeout(musicScheduler);
+    if(musicGain) musicGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.4);
+  }
+  // Short silence then boss theme begins
+  setTimeout(()=>{
+    if(!audioCtx||muted||bossMusicPlaying) return;
+    bossMusicPlaying=true;
+    bossNextBeat=audioCtx.currentTime+0.15;
+    bossPattern=0;
+    scheduleBossLoop();
+  },700);
+}
+
+function stopBossMusic(restoreNormal){
+  bossMusicPlaying=false;
+  clearTimeout(bossMusicScheduler);
+  if(musicGain) musicGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.5);
+  if(restoreNormal){
+    setTimeout(()=>{
+      if(musicGain) musicGain.gain.value=0.38;
+      startMusic();
+    },1000);
+  }
+}
+
+function scheduleBossLoop(){
+  if(!bossMusicPlaying) return;
+  const SECTION=4*BOSS_BAR;
+  while(bossNextBeat<audioCtx.currentTime+SECTION*1.5){
+    scheduleBossSection(bossNextBeat,bossPattern);
+    bossPattern=(bossPattern+1)%BOSS_MELODIES.length;
+    bossNextBeat+=SECTION;
+  }
+  bossMusicScheduler=setTimeout(scheduleBossLoop,SECTION*380);
+}
+
+function scheduleBossSection(st,pat){
+  const mel=BOSS_MELODIES[pat%BOSS_MELODIES.length];
+  let t=st;
+  for(const[f,d] of mel){
+    if(f>0){
+      // Use sawtooth for boss melody — harsher sound
+      makeOsc(f,t,d*BOSS_BEAT*0.8,0.10,'sawtooth');
+      // Add a subtle fifth above for fuller evil sound
+      makeOsc(f*1.5,t,d*BOSS_BEAT*0.6,0.04,'square');
+    }
+    t+=d*BOSS_BEAT;
+  }
+  // Bass — heavier, pulse-like
+  const bass=BOSS_BASS[pat%BOSS_BASS.length];
+  for(let i=0;i<bass.length;i++){
+    const bt=st+i*BOSS_BAR;
+    makeOsc(bass[i],bt,BOSS_BAR*0.4,0.22,'sawtooth');
+    makeOsc(bass[i]*0.5,bt,BOSS_BAR*0.3,0.14,'sine');
+    // Eighth note pulse on bass
+    for(let j=0;j<8;j++){
+      const pt=bt+j*(BOSS_BAR/8);
+      scheduleKick(pt);
+      if(j%2===0) scheduleHihat(pt,0.12);
+      else scheduleHihat(pt,0.06);
+    }
+  }
+}
+</script>
+</body>
+</html>
